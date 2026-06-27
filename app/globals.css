@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--ff-display), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--ff-mono), ui-monospace, 'SF Mono', monospace;
+
+  --color-void: #06070e;
+  --color-ink: #0b0d18;
+  --color-fg: #e9ebf5;
+  --color-muted: #8b91ad;
+  --color-faint: #565c7e;
+  --color-line: rgba(150, 162, 215, 0.1);
+  --color-brand: #67e8f9;
+  --color-brand-2: #a78bfa;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-void);
+    color: var(--color-fg);
+    font-family: var(--ff-display), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+    position: relative;
+  }
+  /* Aurora field */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(62% 50% at 12% -5%, rgba(103, 232, 249, 0.13), transparent 70%),
+      radial-gradient(55% 50% at 105% 12%, rgba(167, 139, 250, 0.13), transparent 70%),
+      radial-gradient(90% 65% at 50% 118%, rgba(56, 189, 248, 0.1), transparent 72%);
+  }
+  /* Grid, faded out toward edges */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(to right, rgba(150, 162, 215, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(150, 162, 215, 0.045) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(circle at 50% 28%, black, transparent 78%);
+    mask-image: radial-gradient(circle at 50% 28%, black, transparent 78%);
+  }
+  ::selection {
+    background: rgba(103, 232, 249, 0.26);
+    color: #fff;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(150, 162, 215, 0.16);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+    border: 1px solid var(--color-line);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .glass-strong {
+    background: linear-gradient(180deg, rgba(16, 19, 33, 0.82), rgba(9, 11, 20, 0.82));
+    border: 1px solid var(--color-line);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .mono {
+    font-family: var(--ff-mono), ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1;
+  }
+  .label {
+    font-family: var(--ff-mono), ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.66rem;
+    color: var(--color-faint);
+  }
+  /* Track for animated bars */
+  .track {
+    background: rgba(150, 162, 215, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes sheen {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes scan {
+  0% {
+    transform: translateY(-120%);
+  }
+  100% {
+    transform: translateY(2100%);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2.4s linear infinite;
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2.2s ease-in-out infinite;
+}
+.animate-float {
+  animation: float-y 7s ease-in-out infinite;
+}
+.shimmer {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(103, 232, 249, 0.14) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: sheen 2.4s linear infinite;
+}
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: linear-gradient(to bottom, transparent, rgba(103, 232, 249, 0.5), transparent);
+  filter: blur(2px);
+  animation: scan 1.6s ease-in-out infinite;
+}
