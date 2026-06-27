@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "will-zelenskyy-wear-a-suit-before-july",
+    "question": "Will Zelenskyy wear a suit before July?",
+    "resolutionText": "This market will resolve to \"Yes\" if Volodymyr Zelenskyy is is photographed or videotaped wearing a suit between May 22 and June 30, 2025 ET. Otherwise, this market will resolve to \"No\".\n\nFor this market to resolve to \"Yes\" the images or video must be taken and released within this market's timeframe. The images or video must be authentic, not the result of artificial intelligence or video editing.\n\nThe resolution source will be a consensus of credible reporting.",
+    "resolutionSource": null,
+    "closeDate": "2025-07-09T00:30:39Z",
+    "expectedResolutionDate": "2025-06-30T12:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-06",
+    "marketTitle": "Will Zelenskyy wear a suit before July?",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "criteria_precision",
+      "literal_vs_intuitive",
+      "source_clarity",
+      "dispute_surface"
+    ],
+    "whatHappened": "Despite Zelenskyy appearing at the June 24, 2025 NATO summit in an outfit numerous major media outlets described as a suit, the market ($242.2M volume) ultimately resolved NO. UMA cited a lack of 'credible reporting consensus' in its July 1 ruling. The YES side was disputed and beaten down to ~4%; the outcome did NOT flip back to YES, and the final resolution closed NO on July 8, drawing widespread accusations that token-rich whales, not facts, drove the verdict.",
+    "source": "https://decrypt.co/329210/polymarket-rules-no-237m-bet-zelenskyys"
+  }
+}

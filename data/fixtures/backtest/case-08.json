@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "microstrategy-sells-any-bitcoin-by-may-31-2026",
+    "question": "MicroStrategy (Strategy) sells any Bitcoin by May 31, 2026?",
+    "resolutionText": "This market will resolve to \"Yes\" if MicroStrategy sells any of its Bitcoin by 11:59 PM ET on the date specified in the title. Otherwise, this market will resolve to \"No\".\n\nThe primary resolution source for this market will be information from MSTR and on-chain data, however a consensus of credible reporting will also be used.",
+    "resolutionSource": null,
+    "closeDate": "2026-06-04T00:34:19Z",
+    "expectedResolutionDate": "2026-07-01T04:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-08",
+    "marketTitle": "MicroStrategy (Strategy) sells any Bitcoin by May 31, 2026?",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "source_clarity",
+      "criteria_precision",
+      "literal_vs_intuitive",
+      "timing"
+    ],
+    "whatHappened": "A Strategy 8-K filed June 1, 2026 disclosed 32 BTC sold between May 26-31 (first disposal since 2022). Two proposed NO resolutions were challenged, sending it to a UMA token vote. UMA voters ruled the May 31 contract NO (and the June 30 contract YES), deciding only the June 1 public-disclosure date counted, not the actual May sale date. Galaxy Research objected that a 'plain reading' should have resolved YES; ~$14M+ was in dispute across the linked contracts.",
+    "source": "https://www.coindesk.com/markets/2026/06/04/polymarket-says-no-for-may-yes-for-june-after-strategy-s-recent-bitcoin-sale"
+  }
+}

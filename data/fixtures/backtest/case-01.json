@@ -1,0 +1,30 @@
+{
+  "market": {
+    "platform": "Kalshi",
+    "marketId": "KXKHAMENEIOUT-AKHA",
+    "question": "Will Ali Khamenei be out as Supreme Leader of Iran?",
+    "resolutionText": "Scope: These rules shall apply to this contract.\n\nUnderlying: The Underlying for this Contract is the status of <leader> after Issuance and before <date>. Revisions to the Underlying made after Expiration will not be accounted for in determining the Expiration Value.\n\nSource Agency: The Source Agency is <leader>, The New York Times, the Associated Press, Bloomberg News, Reuters, Axios, Politico, Semafor, The Information, The Washington Post, The Wall Street Journal, ABC, CBS, CNN, Fox News, MSNBC, and NBC.\n\nType: The type of Contract is an Event Contract.\n\nIssuance: After the initial Contract, Contract iterations will be listed on an as-needed basis at the discretion of the Exchange and corresponding to the risk management needs of Members.\n\n<leader>: <leader> refers to the person occupying a specific governmental leadership position or positions (e.g., President of the United States, Prime Minister of the United Kingdom, etc.) as specified by the Exchange.\n\n<date>: <date> refers to a calendar date specified by the Exchange. The Exchange may list iterations of the Contract corresponding to variations of <date>.\n\nPayout Criterion: The Payout Criterion for the Contract encompasses the Expiration Values that the <leader> has resigned or otherwise left their specified position. An announcement that the <leader> will leave the office within the next year is also encompassed by the Payout Criterion. An acknowledgement by <leader> that they will leave office due solely to the scheduled expiration of a constitutionally or legally mandated term limit does not satisfy the Payout Criterion.\n\nIf a natural person who is the primary subject of a Contract's Underlying or Payout Criterion dies prior to Expiration, Kalshi may, in its sole discretion, settle the Contract at the last traded price prior to the death. If Kalshi determines that trading activity was materially affected by the circumstances giving rise to the death, Kalshi may instead use the last traded price prior to such circumstances becoming known or reasonably anticipated by market participants. For purposes of this Rule, Kalshi may rely on an approximate time where the precise time is unknown or cannot be reasonably determined. If Kalshi determines that no last traded price represents a fair settlement, the Outcome Review Committee shall determine the fair settlement price. Kalshi may halt or pause trading in any such Contract (with public notice on Kalshi's website or the Platform) if it reasonably believes that the death of such person has occurred, is imminent, or that circumstances giving rise to the death may be occurring. Determinations of Kalshi and the Outcome Review Committee under this Rule are final and not subject to review.\n\nMinimum Tick: The Minimum Tick size for the Contract shall be $0.01.\n\nPosition Accountability Level: The Position Accountability Level for the Contract shall be $25,000 per strike, per Member.\n\nLast Trading Date: The Last Trading Date of the Contract will be the same as the Expiration Date. The Last Trading Time will be the same as the Expiration time.\n\nSettlement Date: The Settlement Date of the Contract shall be no later than the day after the Expiration Date, unless the Market Outcome is under review pursuant to Rule 7.1.\n\nExpiration Date: The latest Expiration Date of the Contract shall be <date>. If an event encompassed by the Payout Criterion occurs, expiration will be moved to an earlier date and time in accordance with Rule 7.2.\n\nExpiration time: The Expiration time of the Contract shall be 10:00 AM ET.\n\nSettlement Value: The Settlement Value for this Contract is $1.00.\n\nExpiration Value: The Expiration Value is the value of the Underlying as documented by the Source Agency on the Expiration Date at the Expiration time.\n\nContingencies: Before Settlement, Kalshi may, at its sole discretion, initiate the Market Outcome Review Process pursuant to Rule 6.3(d) of the Rulebook. If an Expiration Value cannot be determined on the Expiration Date, Kalshi has the right to determine payouts pursuant to Rule 6.3(b) in the Rulebook.",
+    "resolutionSource": "The New York Times, the Associated Press, Reuters, Axios, Politico, Semafor, The Information, The Washington Post, The Wall Street Journal, ABC, CBS, CNN, Fox News, MSNBC, Ali Khamenei (x.com/khamenei_ir)",
+    "closeDate": "2026-02-28",
+    "expectedResolutionDate": null,
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-01",
+    "marketTitle": "Will Ali Khamenei be out as Supreme Leader of Iran? (KXKHAMENEIOUT-AKHA, March 1 / April 1, 2026 expirations)",
+    "wentToDispute": true,
+    "textDetectable": "MIXED",
+    "expectedDimensions": [
+      "literal_vs_intuitive",
+      "criteria_precision",
+      "source_clarity",
+      "dispute_surface",
+      "timing"
+    ],
+    "whatHappened": "After U.S.-Israeli strikes killed Khamenei, prices on the 'out of office' contracts spiked (March-1 contract ~$0.02->$0.34; April-1 ~$0.28->$0.66) as traders expected a clean YES. Kalshi halted trading under Rule 13.1 and invoked an undisclosed 'death carveout,' settling at the last traded price before confirmed death (~$0.02 and ~$0.29, essentially pre-strike). Traders who bet on his ouster were not paid the intuitive YES. Kalshi reimbursed fees and net losses, admitted the rule language was 'grammatically ambiguous,' and later filed a CFTC amendment codifying the death rule (effective March 17, 2026). A $54M class action was filed in federal court arguing the contract language was 'clear, unambiguous and binary' and calling the carveout 'deceptive' and 'predatory.'",
+    "source": "https://www.foxbusiness.com/technology/prediction-market-kalshi-sued-54m-iran-leader-bets-death-carveout-invoked"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "ukraine-agrees-to-give-trump-rare-earth-metals-before-april",
+    "question": "Will Ukraine agree to Trump's mineral deal before April?",
+    "resolutionText": "This market will resolve to \"Yes\" if the United States and Ukraine agree to any deal between February 2 and March 31, 2025, 11:59 PM ET, that explicitly involves Ukrainian rare earth elements. Otherwise this market will resolve to \"No\". \n\nThis includes, but is not limited to, agreements related to the exchange of Ukrainian rare earths for U.S. aid (military or civilian), partnerships involving rare earth metals, future rights to rare earth resources, mining rights, or any other form of cooperation related to rare earth elements.\n\nAn announcement of a deal will qualify regardless of if/when the deal is enacted.  \n\nThe resolution source for this market will be official information from the governments of the US and Ukraine.",
+    "resolutionSource": "Official information from the governments of the US and Ukraine",
+    "closeDate": "2025-03-31T12:00:00Z",
+    "expectedResolutionDate": "2025-03-31T12:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-07",
+    "marketTitle": "Will Ukraine agree to Trump's mineral deal before April?",
+    "wentToDispute": true,
+    "textDetectable": "PARTIAL",
+    "expectedDimensions": [
+      "source_clarity",
+      "literal_vs_intuitive",
+      "dispute_surface",
+      "timing"
+    ],
+    "whatHappened": "A single UMA whale using ~5M tokens across three accounts cast ~25% of votes in the dispute round to force a YES resolution on this ~$7M market, even though Ukraine had not agreed to any deal. The market's implied odds jumped 9% to 100%. Polymarket called it an 'unprecedented' governance attack but refused refunds, saying it was not a 'market failure.' The false YES was NOT reversed.",
+    "source": "https://www.theblock.co/post/348171/polymarket-says-governance-attack-by-uma-whale-to-hijack-a-bets-resolution-is-unprecedented"
+  }
+}

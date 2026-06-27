@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "will-the-us-invade-venezuela-in-2025",
+    "question": "Will the U.S. invade Venezuela?",
+    "resolutionText": "This market will resolve to \"Yes\" if the United States commences a military offensive intended to establish control over any portion of Venezuela between September 6 and December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor the purposes of this market, land de facto controlled by Venezuela or the United States as of September 6, 2025, 12:00 PM ET, will be considered the sovereign territory of that country.\n\nThe resolution source for this market will be a consensus of credible sources.",
+    "resolutionSource": null,
+    "closeDate": "2026-01-01T08:54:45Z",
+    "expectedResolutionDate": "2025-12-31T00:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-13",
+    "marketTitle": "Will the U.S. invade Venezuela? (2025/2026 invasion market)",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "criteria_precision",
+      "literal_vs_intuitive",
+      "source_clarity",
+      "dispute_surface"
+    ],
+    "whatHappened": "Despite the Jan 3, 2026 Operation Absolute Resolve — airstrikes plus a special-forces raid that captured Nicolas Maduro and installed an interim leader — Polymarket withheld settlement on ~$11M in bets, arguing the operation did not meet the contract's definition of 'invasion' (which required the U.S. military to 'commence a military offensive intended to establish control over any portion of Venezuela'). Bettors were furious that a raid capturing a head of state was ruled not an invasion.",
+    "source": "https://www.gamblinginsider.com/news/101486/polymarket-venezuela-invasion-market-remains-unsettled"
+  }
+}

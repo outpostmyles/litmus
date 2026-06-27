@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "ethereum-etf-approved-by-may-31",
+    "question": "Ethereum ETF approved by May 31, 2024?",
+    "resolutionText": "This market will resolve to \"Yes\" if any spot Ethereum ETF receives approval from the SEC by May 31, 2024, 11:59:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThe primary resolution source for this market will be information from the SEC, however a consensus of credible reporting may also be used.",
+    "resolutionSource": null,
+    "closeDate": "2024-05-23",
+    "expectedResolutionDate": "2024-05-31T12:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-12",
+    "marketTitle": "Ethereum ETF approved by May 31, 2024?",
+    "wentToDispute": true,
+    "textDetectable": "PARTIAL",
+    "expectedDimensions": [
+      "criteria_precision",
+      "literal_vs_intuitive",
+      "source_clarity",
+      "dispute_surface"
+    ],
+    "whatHappened": "Market (~$13.2M volume) resolved YES on May 23, 2024 after the SEC approved the 19b-4 filings for multiple spot Ether ETFs. The outcome was briefly disputed: NO voters argued 'approved' required the S-1 registration statements (needed before the ETFs could actually trade), not just the 19b-4 approvals. It resolved YES after dispute, but exposed the definitional ambiguity in 'approved.'",
+    "source": "https://cointelegraph.com/news/polymarket-gets-backlash-over-approved-outcome-13-million-ethereum-etf-bet"
+  }
+}

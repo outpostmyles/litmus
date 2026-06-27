@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "tiktok-banned-in-the-us-before-may-2025",
+    "question": "TikTok banned in the US before May 2025?",
+    "resolutionText": "This market will resolve to \"Yes\" if the TikTok app is banned for download and/or use by the majority of Americans in the United States by April 30, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor this market to resolve to \"Yes\", a ban mandated by US federal law, policy, or the court system must have gone into effect (as defined above) within the above-stated timeframe.\n\nIf TikTok is sold to another entity in such a way that it comes into compliance with U.S. laws and regulations this market will resolve to \"No\". \n\nThe primary resolution source for this market will be information from the US federal government, however a consensus of credible reporting will also be used.",
+    "resolutionSource": null,
+    "closeDate": "2025-01-22T00:31:19Z",
+    "expectedResolutionDate": "2025-04-30T12:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-09",
+    "marketTitle": "TikTok banned in the US before May 2025?",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "literal_vs_intuitive",
+      "criteria_precision",
+      "timing",
+      "dispute_surface"
+    ],
+    "whatHappened": "Market ($120M volume) resolved YES on Jan 20, 2025 after the Supreme Court upheld the divest-or-ban law — but TikTok was operational in the US (it went offline only briefly and returned the same weekend), so users argued it was never actually 'banned' in any enforcement sense. Bettors alleged the DVM escalation was bypassed and the market resolved directly to YES; a petition demanded investigation of the UMA vote.",
+    "source": "https://cointelegraph.com/news/polymarket-faces-backlash-over-tik-tok-ban-prediction-resolution"
+  }
+}

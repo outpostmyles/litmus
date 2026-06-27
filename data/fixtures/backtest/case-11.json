@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "was-barron-involved-in-djt",
+    "question": "Was Barron Trump involved with the $DJT token?",
+    "resolutionText": "This market will resolve to \"Yes\" if a preponderance of evidence suggests that Barron Trump was involved in the creation of the Solana token $DJT. Otherwise this market will resolve to \"No\".  \n\nDetermination as to whether Barron was involved in the creation of $DJT will be made by this market's decentralized resolver, UMA, and will take into account all available evidence as of 12 PM ET, June 23.",
+    "resolutionSource": null,
+    "closeDate": "2024-06-26T00:20:11Z",
+    "expectedResolutionDate": "2024-06-23T12:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-11",
+    "marketTitle": "Was Barron Trump involved with the $DJT token?",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "source_clarity",
+      "criteria_precision",
+      "literal_vs_intuitive",
+      "dispute_surface"
+    ],
+    "whatHappened": "UMA voters overwhelmingly resolved NO, finding the 'preponderance of evidence' available on June 23, 2024 did not show Barron's involvement (~$1M+ wagered). Polymarket then OVERRULED its own oracle, publicly stating Barron was involved 'in some way' / 'conclusively,' provided no public evidence, and refunded YES holders. This is the only known case where Polymarket contradicted UMA's verdict.",
+    "source": "https://www.coindesk.com/markets/2024/06/27/polymarket-contradicts-its-oracle-service-in-rarity-for-prediction-market"
+  }
+}

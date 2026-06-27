@@ -1,0 +1,9 @@
+{
+  "platform": "Kalshi",
+  "marketId": "SAMPLE-FED-CUT",
+  "question": "Will the Fed cut rates at the next meeting?",
+  "outcomes": ["Yes", "No"],
+  "closeDate": "2026-07-29T18:00:00Z",
+  "expectedResolutionDate": "2026-07-29",
+  "resolutionText": "This market resolves Yes if the Federal Reserve cuts interest rates at its next meeting. It resolves No otherwise. The outcome will be determined based on widely reported news of the Fed's decision."
+}

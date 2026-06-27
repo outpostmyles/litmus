@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "will-cardi-b-perform-during-the-super-bowl-lx-halftime-show",
+    "question": "Will Cardi B perform at the Super Bowl LX halftime show?",
+    "resolutionText": "This market will resolve to \"Yes\" if Cardi B performs live and in person during the Super Bowl LX halftime show currently scheduled for February 8, 2026. Otherwise, this market will resolve to \"No.\"\n\nIf this event is cancelled or otherwise delayed beyond March 31, 2026, 11:59 PM ET, this market will resolve to \"No\".\n\nThe primary resolution source for this market will be footage of the Super Bowl LX halftime show, however a consensus of credible reporting will also be used.",
+    "resolutionSource": null,
+    "closeDate": "2026-02-09T00:00:00Z",
+    "expectedResolutionDate": null,
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-14",
+    "marketTitle": "Will Cardi B perform at the Super Bowl LX halftime show?",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "criteria_precision",
+      "literal_vs_intuitive",
+      "dispute_surface",
+      "source_clarity"
+    ],
+    "whatHappened": "Cardi B appeared on stage during Bad Bunny's Feb 8, 2026 halftime show and danced but did not take a mic or visibly sing. Polymarket (~$10M volume) resolved that she HAD performed (YES, disputed), while Kalshi (~$47.3M) effectively settled the opposite way (paying 74c to NO holders), ruling that dancing in the background did not count as performing. At least one Kalshi trader filed a CFTC complaint. The two largest prediction markets reached OPPOSITE resolutions on the identical real-world event.",
+    "source": "https://www.cbsnews.com/news/cardi-b-super-bowl-prediction-market-dispute/"
+  }
+}

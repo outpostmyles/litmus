@@ -1,0 +1,24 @@
+{
+  "name": "litmus",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Litmus — resolution-risk scanner for prediction markets. Scores how likely a live Kalshi/Polymarket market is to settle differently than traders expect.",
+  "scripts": {
+    "score": "tsx src/engine/cli.ts",
+    "scan": "tsx src/scan/run.ts",
+    "backtest": "tsx src/backtest/run.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
+    "dotenv": "^17.4.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

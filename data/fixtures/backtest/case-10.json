@@ -1,0 +1,29 @@
+{
+  "market": {
+    "platform": "Polymarket",
+    "marketId": "will-the-missing-submarine-be-found-by-june-23",
+    "question": "Will the missing submarine be found by June 23?",
+    "resolutionText": "This market will resolve to “Yes” if the OceanGate vessel in St John's, Newfoundland which had been exploring the wreckage of the RMS Titanic is found by Friday, June 23, 2023, 11:59:59 PM ET.\n\nFor the purposes of this market, the vessel need not have been rescued or physically recovered to be considered “found.” If pieces are located, but not the cabin which contains the vessel’s passengers, that will not suffice for this market to resolve to “Yes.” \n \nThe resolution source for this market will be either an official statement from OceanGate, the US Coastguard, or another credible government agency. If no such statement is issued, a consensus of credible reporting may be used.",
+    "resolutionSource": null,
+    "closeDate": "2023-06-23T00:00:00Z",
+    "expectedResolutionDate": "2023-06-23T00:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-10",
+    "marketTitle": "Will the missing submarine be found by June 23? (OceanGate Titan)",
+    "wentToDispute": true,
+    "textDetectable": "STRONG",
+    "expectedDimensions": [
+      "literal_vs_intuitive",
+      "criteria_precision",
+      "dispute_surface",
+      "source_clarity"
+    ],
+    "whatHappened": "Market (~$2M wagers) resolved YES after the US Coast Guard announced on June 22, 2023 it had located debris from the imploded Titan submersible. The fine print said locating pieces but NOT the passenger cabin would not suffice for YES, making the call contentious. The dispute went to UMA, and critics alleged a handful of whales decided the YES outcome — some allegedly voting against their own judgment because they held YES positions.",
+    "source": "https://www.dlnews.com/articles/markets/crypto-bets-on-titan-sub-cause-uproar-at-uma-polymarket/"
+  }
+}

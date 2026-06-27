@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+kalshi_private_key*
+
+# build output
+dist/
+.next/
+out/
+build/
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# data — keep curated fixtures, ignore bulk pulls
+data/raw/
+data/cache/

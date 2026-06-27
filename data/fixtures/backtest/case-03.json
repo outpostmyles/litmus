@@ -1,0 +1,27 @@
+{
+  "market": {
+    "platform": "Kalshi",
+    "marketId": "KXNFLWINS-SF-25B-T10",
+    "question": "NFL regular-season win totals",
+    "resolutionText": "If the San Francisco pro football team has more than 10 wins in the 2025-26 regular season, then the market resolves to Yes.\n\nTies do not count as wins.",
+    "resolutionSource": "ESPN; NFL",
+    "closeDate": "2026-01-14T15:00:00Z",
+    "expectedResolutionDate": "2026-01-14T15:00:00Z",
+    "outcomes": [
+      "Yes",
+      "No"
+    ]
+  },
+  "label": {
+    "caseId": "case-03",
+    "marketTitle": "NFL regular-season win totals (e.g., San Francisco 49ers over 10.5 wins)",
+    "wentToDispute": true,
+    "textDetectable": "WEAK",
+    "expectedDimensions": [
+      "timing",
+      "dispute_surface"
+    ],
+    "whatHappened": "After the 2025 season, Kalshi initially graded multiple win-total markets incorrectly: a trader holding YES on 49ers over 10.5 (team won 12) was refunded only the original stake rather than paid the $1 contract value, and Kalshi announced this as 'the final result.' On Jan 7, 2026 journalist Dustin Gouker posted Discord screenshots that went viral (1.18M+ views); by the morning of Jan 8 Kalshi reversed, stating users holding correct YES positions 'shall be paid out their full contract settlement value of $1,' and credited the difference. The error affected many win-total markets, not just the 49ers.",
+    "source": "https://nexteventhorizon.substack.com/p/why-wasnt-kalshi-paying-traders-that-won-nfl-futures"
+  }
+}
