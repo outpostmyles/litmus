@@ -14,6 +14,8 @@
     "backfill": "tsx src/cache/backfill-cli.ts",
     "enrich": "tsx src/cache/enrich-lean-cli.ts",
     "alerts": "tsx src/cache/alerts-cli.ts",
+    "snapshot": "tsx src/track/snapshot-cli.ts",
+    "settle": "tsx src/track/settle-cli.ts",
     "backtest": "tsx src/backtest/run.ts",
     "typecheck": "tsc --noEmit"
   },

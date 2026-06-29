@@ -61,7 +61,8 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
       const mi = await fetchKalshiMarket(q.rep.ticker)
       out.push({
         platform: 'Kalshi',
-        marketId: q.event.event_ticker || q.rep.ticker,
+        // The representative market ticker (resolvable via GET /markets/{ticker}); event ticker is the fallback.
+        marketId: q.rep.ticker || q.event.event_ticker,
         rulebookHash: rulebookHash('Kalshi', mi.resolutionText),
         question: q.event.title || mi.question,
         category: q.event.category || 'Other',
