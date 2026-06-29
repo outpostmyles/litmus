@@ -72,6 +72,11 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
         volume: q.totalVol,
         marketCount: q.count,
         totalVolume: q.totalVol,
+        priceYes:
+          Number(q.rep.last_price_dollars) > 0 && Number(q.rep.last_price_dollars) < 1
+            ? Number(q.rep.last_price_dollars)
+            : null,
+        priceAsOf: new Date().toISOString(),
         url: null,
         fetchedAt: new Date().toISOString(),
       })
@@ -112,6 +117,16 @@ export async function ingestPolymarket(minVolume: number, max: number): Promise<
     } catch {
       /* keep default */
     }
+    let priceYes: number | null = null
+    try {
+      const op = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices
+      if (Array.isArray(op) && op[0] != null) {
+        const p = Number(op[0])
+        if (p > 0 && p < 1) priceYes = p
+      }
+    } catch {
+      /* no price */
+    }
     out.push({
       platform: 'Polymarket',
       marketId: String(m.id ?? m.slug ?? ''),
@@ -125,6 +140,8 @@ export async function ingestPolymarket(minVolume: number, max: number): Promise<
       volume: g.total,
       marketCount: g.count,
       totalVolume: g.total,
+      priceYes,
+      priceAsOf: new Date().toISOString(),
       url: m.slug ? `https://polymarket.com/event/${m.slug}` : null,
       fetchedAt: new Date().toISOString(),
     })

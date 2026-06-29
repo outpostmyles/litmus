@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { riskColor, BAND_LABEL, type RiskBand, type ScoreResult, type DimensionResult } from '@/lib/litmus'
+import {
+  riskColor,
+  BAND_LABEL,
+  edgeTag,
+  type RiskBand,
+  type ScoreResult,
+  type DimensionResult,
+  type LiteralFavors,
+} from '@/lib/litmus'
 import { ResultCard } from './ResultCard'
 
 interface Item {
@@ -17,6 +25,8 @@ interface Item {
   closeDate: string | null
   volume: number
   marketCount: number
+  priceYes: number | null
+  priceAsOf: string | null
   url: string | null
   score: {
     combined: number
@@ -28,6 +38,8 @@ interface Item {
     summary: string
     model: string
     scoredAt: string
+    literalFavors?: LiteralFavors
+    literalFavorsNote?: string
   }
 }
 
@@ -48,6 +60,9 @@ function compact(n: number): string {
 }
 function fmtVol(platform: string, v: number): string {
   return platform === 'Polymarket' ? '$' + compact(v) : compact(v) + ' ct'
+}
+function fmtPrice(p: number | null): string | null {
+  return p == null ? null : Math.round(p * 100) + '¢'
 }
 function closesIn(iso: string | null): string | null {
   if (!iso) return null
@@ -70,6 +85,8 @@ function toResult(it: Item): ScoreResult {
     headlineRisk: it.score.headlineRisk,
     summary: it.score.summary,
     model: it.score.model,
+    literalFavors: it.score.literalFavors ?? null,
+    literalFavorsNote: it.score.literalFavorsNote ?? null,
     market: {
       platform: it.platform,
       question: it.question,
@@ -78,6 +95,7 @@ function toResult(it: Item): ScoreResult {
       resolutionSource: it.resolutionSource,
       closeDate: it.closeDate,
       outcomes: it.outcomes,
+      priceYes: it.priceYes,
     },
   }
 }
@@ -91,7 +109,8 @@ export function Dashboard() {
   const [category, setCategory] = useState('all')
   const [band, setBand] = useState<RiskBand | 'all'>('all')
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<'risk' | 'volume' | 'closing'>('risk')
+  const [sort, setSort] = useState<'risk' | 'edge' | 'volume' | 'closing'>('risk')
+  const [edgesOnly, setEdgesOnly] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
 
   async function load() {
@@ -113,10 +132,8 @@ export function Dashboard() {
   }, [])
 
   const items = data?.items ?? []
-  const categories = useMemo(
-    () => ['all', ...Array.from(new Set(items.map((i) => i.category))).sort()],
-    [items],
-  )
+  const categories = useMemo(() => ['all', ...Array.from(new Set(items.map((i) => i.category))).sort()], [items])
+  const edgeCount = useMemo(() => items.filter((i) => edgeTag(i.score.literalFavors, i.priceYes)).length, [items])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -124,6 +141,7 @@ export function Dashboard() {
       if (platform !== 'all' && i.platform !== platform) return false
       if (category !== 'all' && i.category !== category) return false
       if (band !== 'all' && i.score.band !== band) return false
+      if (edgesOnly && !edgeTag(i.score.literalFavors, i.priceYes)) return false
       if (q && !i.question.toLowerCase().includes(q) && !i.score.headlineRisk.toLowerCase().includes(q)) return false
       return true
     })
@@ -134,14 +152,21 @@ export function Dashboard() {
         const tb = b.closeDate ? new Date(b.closeDate).getTime() : Infinity
         return ta - tb
       }
+      if (sort === 'edge') {
+        const ea = edgeTag(a.score.literalFavors, a.priceYes)
+        const eb = edgeTag(b.score.literalFavors, b.priceYes)
+        if (ea && eb) return eb.strength - ea.strength
+        if (ea) return -1
+        if (eb) return 1
+        return b.score.combined - a.score.combined
+      }
       return b.score.combined - a.score.combined
     })
     return out
-  }, [items, platform, category, band, query, sort])
+  }, [items, platform, category, band, query, sort, edgesOnly])
 
   return (
     <div>
-      {/* controls */}
       <div className="glass rounded-2xl p-3">
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex rounded-xl bg-black/30 p-1">
@@ -182,19 +207,29 @@ export function Dashboard() {
             ))}
           </select>
 
+          <button
+            onClick={() => setEdgesOnly((v) => !v)}
+            className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+              edgesOnly ? 'border-brand/50 bg-brand/10 text-brand' : 'border-line text-muted hover:text-fg'
+            }`}
+          >
+            ⚡ edges{edgeCount ? ` (${edgeCount})` : ''}
+          </button>
+
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="search…"
-            className="mono min-w-[8rem] flex-1 rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
+            className="mono min-w-[7rem] flex-1 rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
           />
 
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value as 'risk' | 'volume' | 'closing')}
+            onChange={(e) => setSort(e.target.value as 'risk' | 'edge' | 'volume' | 'closing')}
             className="rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none focus:ring-1 focus:ring-brand/40"
           >
             <option value="risk">Sort: risk</option>
+            <option value="edge">Sort: edge</option>
             <option value="volume">Sort: volume</option>
             <option value="closing">Sort: closing soon</option>
           </select>
@@ -211,11 +246,11 @@ export function Dashboard() {
         {data && (
           <div className="mono mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-faint">
             <span>
-              {filtered.length} shown · {data.scoredCount} scored
+              {filtered.length} shown · {data.scoredCount} scored · <span className="text-brand">{edgeCount} edges</span>
             </span>
             {data.unscoredCount > 0 && (
               <span className="text-amber-300/80">
-                {data.unscoredCount} not yet scored — run <span className="text-amber-200">npm run backfill</span> (then ↻)
+                {data.unscoredCount} not yet scored — run <span className="text-amber-200">npm run backfill</span>
               </span>
             )}
           </div>
@@ -240,6 +275,8 @@ export function Dashboard() {
           const color = riskColor(it.score.combined)
           const isOpen = expanded === it.rulebookHash
           const closes = closesIn(it.closeDate)
+          const price = fmtPrice(it.priceYes)
+          const edge = edgeTag(it.score.literalFavors, it.priceYes)
           return (
             <div key={it.rulebookHash}>
               <button
@@ -261,9 +298,13 @@ export function Dashboard() {
                     <span>{it.platform}</span>
                     <span className="text-faint/70">{it.category}</span>
                     <span className="text-muted">{fmtVol(it.platform, it.volume)}</span>
+                    {price && <span className="text-fg/80">Yes {price}</span>}
                     {it.marketCount > 1 && <span className="text-faint/70">×{it.marketCount}</span>}
                     {closes && <span className="text-faint/70">{closes}</span>}
                     {!it.score.namedSource && <span className="text-rose-400/80">no source</span>}
+                    {edge && (
+                      <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">⚡ {edge.label}</span>
+                    )}
                   </div>
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
                   <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">⚑ {it.score.headlineRisk}</div>

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { riskColor, type ScoreResult } from '@/lib/litmus'
+import { riskColor, edgeTag, type ScoreResult } from '@/lib/litmus'
 import { RiskGauge } from './RiskGauge'
 import { DimensionRow } from './DimensionRow'
 
@@ -33,6 +33,7 @@ function Meta({ label, value, warn = false }: { label: string; value: string; wa
 export function ResultCard({ r }: { r: ScoreResult }) {
   const color = riskColor(r.combined)
   const closes = fmtDate(r.market.closeDate)
+  const edge = edgeTag(r.literalFavors, r.market.priceYes)
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -56,6 +57,32 @@ export function ResultCard({ r }: { r: ScoreResult }) {
           {closes && <span className="mono text-xs text-faint">· closes {closes}</span>}
         </div>
         <h2 className="mt-3 text-2xl font-semibold leading-snug text-fg sm:text-[1.7rem]">{r.market.question}</h2>
+
+        {(r.market.priceYes != null || (r.literalFavors && r.literalFavors !== 'neither')) && (
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            {r.market.priceYes != null && (
+              <span className="mono rounded-md border border-line bg-white/[0.03] px-2.5 py-1 text-xs text-fg">
+                market · Yes {Math.round(r.market.priceYes * 100)}¢
+              </span>
+            )}
+            {r.literalFavors && r.literalFavors !== 'neither' && (
+              <span className="mono rounded-md border border-line bg-white/[0.03] px-2.5 py-1 text-xs text-muted">
+                rules lean → {r.literalFavors === 'yes' ? 'Yes' : 'No'}
+              </span>
+            )}
+            {edge && (
+              <span
+                className="mono rounded-md px-2.5 py-1 text-xs font-medium"
+                style={{ background: 'rgba(103,232,249,0.14)', color: '#67e8f9' }}
+              >
+                ⚡ edge · {edge.label}
+              </span>
+            )}
+          </div>
+        )}
+        {r.literalFavorsNote && r.literalFavors && r.literalFavors !== 'neither' && (
+          <p className="mt-2 max-w-3xl text-[0.86rem] leading-relaxed text-muted">{r.literalFavorsNote}</p>
+        )}
 
         <div className="mt-7 grid items-center gap-8 sm:grid-cols-[auto_1fr]">
           <div className="mx-auto">

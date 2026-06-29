@@ -12,6 +12,7 @@
     "scan": "tsx src/scan/run.ts",
     "ingest": "tsx src/cache/ingest-cli.ts",
     "backfill": "tsx src/cache/backfill-cli.ts",
+    "enrich": "tsx src/cache/enrich-lean-cli.ts",
     "backtest": "tsx src/backtest/run.ts",
     "typecheck": "tsc --noEmit"
   },

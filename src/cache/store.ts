@@ -42,6 +42,9 @@ export interface CatalogEntry {
   marketCount: number
   /** Aggregate volume across the group. */
   totalVolume: number
+  /** Current implied probability of "Yes" (0–1), or null. Refreshed on ingest. */
+  priceYes: number | null
+  priceAsOf: string | null
   url: string | null
   fetchedAt: string
 }
@@ -63,6 +66,9 @@ export interface CachedScore {
   summary: string
   model: string
   scoredAt: string
+  /** Directional lean of the literal rules (added by the cheap enrichment pass). */
+  literalFavors?: 'yes' | 'no' | 'neither'
+  literalFavorsNote?: string
 }
 
 export function loadCatalog(): CatalogEntry[] {

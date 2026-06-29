@@ -20,7 +20,12 @@ export interface MarketEcho {
   resolutionSource?: string | null
   closeDate?: string | null
   outcomes?: string[]
+  /** Current implied probability of "Yes" (0–1), as last fetched. */
+  priceYes?: number | null
 }
+
+/** Which outcome the LITERAL rules favor when they diverge from the intuitive reading. */
+export type LiteralFavors = 'yes' | 'no' | 'neither'
 
 export interface ScoreResult {
   combined: number
@@ -33,6 +38,35 @@ export interface ScoreResult {
   model: string
   usage?: { inputTokens: number; outputTokens: number }
   market: MarketEcho
+  /** Direction the literal rules lean vs. the intuitive reading (enrichment layer). */
+  literalFavors?: LiteralFavors | null
+  literalFavorsNote?: string | null
+}
+
+/**
+ * A flag when the literal lean disagrees with how the crowd is pricing the market —
+ * the seed of a trade idea: the rules favor one side, the price favors the other.
+ */
+export interface Edge {
+  side: 'yes' | 'no'
+  label: string
+  /** 0–1, how far the price is from the rules-favored side. */
+  strength: number
+}
+
+export function edgeTag(
+  literalFavors: LiteralFavors | string | null | undefined,
+  priceYes: number | null | undefined,
+): Edge | null {
+  if (!literalFavors || literalFavors === 'neither' || priceYes == null) return null
+  const pct = Math.round(priceYes * 100)
+  if (literalFavors === 'no' && priceYes >= 0.6) {
+    return { side: 'no', label: `rules → No · ${pct}¢ Yes`, strength: priceYes }
+  }
+  if (literalFavors === 'yes' && priceYes <= 0.4) {
+    return { side: 'yes', label: `rules → Yes · ${pct}¢ Yes`, strength: 1 - priceYes }
+  }
+  return null
 }
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n))

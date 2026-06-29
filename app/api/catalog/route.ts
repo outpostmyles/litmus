@@ -36,6 +36,8 @@ export async function GET() {
     closeDate: e.closeDate,
     volume: e.totalVolume,
     marketCount: e.marketCount,
+    priceYes: e.priceYes ?? null,
+    priceAsOf: e.priceAsOf ?? null,
     url: e.url,
     score: scores[e.rulebookHash] ?? null,
   }))
