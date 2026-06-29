@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 const LINKS = [
   { href: '/', label: 'Lookup' },
   { href: '/board', label: 'Board' },
+  { href: '/guide', label: 'Guide' },
 ]
 
 export function LitmusMark({ size = 30 }: { size?: number }) {
