@@ -79,14 +79,14 @@ export function LookupForm() {
               onChange={(e) => setValue(e.target.value)}
               placeholder={current.placeholder}
               rows={4}
-              className="mono w-full resize-none rounded-xl bg-black/30 px-4 py-3 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
+              className="mono w-full resize-none rounded-xl bg-black/30 px-4 py-3 text-sm text-fg outline-none placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           ) : (
             <input
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder={current.placeholder}
-              className="mono w-full rounded-xl bg-black/30 px-4 py-3 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
+              className="mono w-full rounded-xl bg-black/30 px-4 py-3 text-sm text-fg outline-none placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           )}
           <button

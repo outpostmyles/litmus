@@ -92,7 +92,7 @@ async function main(): Promise<void> {
     console.log(
       `  ${String(i + 1).padStart(2)}. ${String(r.s.combined).padStart(3)} ${r.s.band.padEnd(9)} [${r.m.platform}] ${r.m.question.slice(0, 54)}`,
     )
-    console.log(`       ⚑ ${r.s.headlineRisk.slice(0, 92)}`)
+    console.log(`       ${r.s.headlineRisk.slice(0, 92)}`)
   })
   console.log('  ' + '─'.repeat(80))
 

@@ -38,19 +38,19 @@ function main(): void {
 
   console.log('\n  LITMUS ALERTS\n')
   if (closingSoon.length) {
-    console.log('  ★ watched, resolving soon:')
+    console.log('  watched, resolving soon:')
     for (const a of closingSoon) {
       console.log(`     ${a.daysUntil === 0 ? 'today' : a.daysUntil + 'd'}  ${a.question}${a.combined != null ? `  (risk ${a.combined})` : ''}`)
     }
     console.log('')
   }
   if (changed.length) {
-    console.log('  ⚠ watched, rules changed / closed:')
+    console.log('  watched, rules changed / closed:')
     for (const a of changed) console.log(`     ${a.question}`)
     console.log('')
   }
   if (hotTop.length) {
-    console.log(`  ⚡ hot edges closing within ${HOT_DAYS}d:`)
+    console.log(`  hot edges closing within ${HOT_DAYS}d:`)
     for (const h of hotTop) {
       console.log(`     act ${String(h.act).padStart(2)} · ${h.d}d · ${h.label}  ${h.q.slice(0, 46)}`)
     }

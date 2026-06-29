@@ -88,7 +88,7 @@ async function main(): Promise<void> {
     const detect = isTextDetectable(r.fixture) ? 'text' : 'ctrl'
     console.log(
       `  ${r.fixture.label.caseId.padEnd(9)} ${String(s.combined).padStart(4)}  ${s.band.padEnd(9)} ` +
-        `${flagged ? ' ⚑ ' : '   '}  ${detect.padEnd(6)} ${expected.length ? `${hits}/${expected.length}` : '—'}`,
+        `${flagged ? ' * ' : '   '}  ${detect.padEnd(6)} ${expected.length ? `${hits}/${expected.length}` : '—'}`,
     )
   }
   console.log('  ' + '─'.repeat(78))

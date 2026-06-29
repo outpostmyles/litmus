@@ -14,6 +14,23 @@ import {
 } from '@/lib/litmus'
 import { ResultCard } from './ResultCard'
 
+function StarIcon({ filled, size = 16 }: { filled: boolean; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 3.6l2.65 5.37 5.93.86-4.29 4.18 1.01 5.9L12 17.9l-5.31 2.79 1.01-5.9-4.29-4.18 5.93-.86z" />
+    </svg>
+  )
+}
+
 interface Item {
   rulebookHash: string
   platform: string
@@ -261,16 +278,16 @@ export function Dashboard() {
               edgesOnly ? 'border-brand/50 bg-brand/10 text-brand' : 'border-line text-muted hover:text-fg'
             }`}
           >
-            ⚡ edges{edgeCount ? ` (${edgeCount})` : ''}
+            edges{edgeCount ? ` (${edgeCount})` : ''}
           </button>
 
           <button
             onClick={() => setWatchOnly((v) => !v)}
-            className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition-colors ${
               watchOnly ? 'border-amber-400/50 bg-amber-400/10 text-amber-300' : 'border-line text-muted hover:text-fg'
             }`}
           >
-            ★ watch{watched.size ? ` (${watched.size})` : ''}
+            <StarIcon filled={watchOnly} size={13} /> watch{watched.size ? ` (${watched.size})` : ''}
           </button>
 
           <input
@@ -316,7 +333,7 @@ export function Dashboard() {
 
       {hasAlerts && (
         <div className="mt-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] px-4 py-3">
-          <div className="mono text-[0.7rem] uppercase tracking-wider text-amber-300">⏰ alerts</div>
+          <div className="mono text-[0.7rem] uppercase tracking-wider text-amber-300">alerts</div>
           <div className="mt-1.5 space-y-1 text-sm">
             {alerts.closingSoon.map((a) => (
               <div key={a.hash} className="text-fg/90">
@@ -326,7 +343,7 @@ export function Dashboard() {
             ))}
             {alerts.changed.map((a) => (
               <div key={a.hash} className="text-rose-300">
-                ⚠ rules changed / closed · {a.question}
+                rules changed / closed · {a.question}
               </div>
             ))}
           </div>
@@ -361,7 +378,13 @@ export function Dashboard() {
                 role="button"
                 tabIndex={0}
                 onClick={() => setExpanded(isOpen ? null : it.rulebookHash)}
-                className="glass relative flex cursor-pointer items-center gap-4 overflow-hidden rounded-2xl px-4 py-3.5 transition-colors hover:bg-white/[0.02] sm:px-5"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setExpanded(isOpen ? null : it.rulebookHash)
+                  }
+                }}
+                className="glass relative flex cursor-pointer items-center gap-4 overflow-hidden rounded-2xl px-4 py-3.5 outline-none transition-colors hover:bg-white/[0.02] focus-visible:ring-1 focus-visible:ring-brand/40 sm:px-5"
               >
                 <div className="absolute left-0 top-0 h-full w-1" style={{ background: color }} />
                 <div className="mono w-5 shrink-0 text-center text-sm text-faint">{rank + 1}</div>
@@ -381,15 +404,15 @@ export function Dashboard() {
                     {price && <span className="text-fg/80">Yes {price}</span>}
                     {it.marketCount > 1 && <span className="text-faint/70">×{it.marketCount}</span>}
                     {closes && <span className="text-faint/70">{closes}</span>}
-                    {!it.score.namedSource && <span className="text-rose-400/80">no source</span>}
+                    {!it.score.namedSource && <span className="text-rose-300">no source</span>}
                     {edge && (
-                      <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">
-                        ⚡ act {act} · {edge.label}
+                      <span className="rounded-md bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">
+                        act {act} · {edge.label}
                       </span>
                     )}
                   </div>
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
-                  <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">⚑ {it.score.headlineRisk}</div>
+                  <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">{it.score.headlineRisk}</div>
                 </div>
                 <button
                   onClick={(e) => {
@@ -397,11 +420,11 @@ export function Dashboard() {
                     toggleWatch(it)
                   }}
                   aria-label={isWatched ? 'unwatch' : 'watch'}
-                  className={`shrink-0 px-1 text-lg leading-none transition-colors ${
+                  className={`shrink-0 px-1 transition-colors ${
                     isWatched ? 'text-amber-300' : 'text-faint hover:text-amber-300'
                   }`}
                 >
-                  {isWatched ? '★' : '☆'}
+                  <StarIcon filled={isWatched} />
                 </button>
                 <div className={`mono shrink-0 text-faint transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</div>
               </div>

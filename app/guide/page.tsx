@@ -126,7 +126,7 @@ export default function GuidePage() {
               ['×28', 'how many markets share this rulebook (a fan-out, e.g. every World Cup team).'],
               ['2d / 6mo', 'how soon it resolves.'],
               ['no source', 'no authoritative source of truth is named — the biggest red flag.'],
-              ['⚡ act 61 · rules → No · 91¢', 'an edge: the rules and the price disagree (see below).'],
+              ['act 61 · rules → No · 91¢', 'an edge: the rules and the price disagree (see below).'],
             ].map(([k, v]) => (
               <li key={k} className="flex flex-col gap-1 rounded-xl border border-line bg-black/20 px-3.5 py-2.5 sm:flex-row sm:gap-3">
                 <span className="mono shrink-0 text-xs text-brand sm:w-40">{k}</span>
@@ -153,7 +153,7 @@ export default function GuidePage() {
             <li>
               <span className="text-fg">Actionability</span> — ranks edges by how dislocated the price is × how soon it
               resolves × how real the trap is, so a near-term mispricing beats a 2099 lottery. Toggle{' '}
-              <span className="mono text-brand">⚡ edges</span> and sort by edge to see them.
+              <span className="mono text-brand">edges</span> and sort by edge to see them.
             </li>
           </ul>
           <div className="glass rounded-2xl border-l-2 border-l-brand/60 px-4 py-3.5">

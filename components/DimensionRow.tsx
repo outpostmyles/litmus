@@ -25,7 +25,7 @@ export function DimensionRow({ d, index = 0 }: { d: DimensionResult; index?: num
       <p className="mt-2.5 text-[0.92rem] leading-relaxed text-muted">{d.reasoning}</p>
       {d.offendingClause && (
         <p
-          className="mono mt-2.5 border-l-2 pl-3 text-[0.8rem] leading-relaxed text-faint"
+          className="mono mt-2.5 border-l-2 pl-3 text-[0.8rem] leading-relaxed text-muted"
           style={{ borderColor: riskColor(d.score, 0.5) }}
         >
           “{d.offendingClause}”

@@ -200,7 +200,7 @@ export function BoardClient() {
                     )}
                   </div>
                   <div className="truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
-                  <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">⚑ {it.headlineRisk}</div>
+                  <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">{it.headlineRisk}</div>
                 </div>
               </motion.div>
             )

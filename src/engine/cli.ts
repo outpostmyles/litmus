@@ -37,7 +37,7 @@ function render(market: { question: string; platform: string }, score: LitmusSco
   else out.push(`  Source of truth: (none named)`)
   if (score.assumedVsActual) out.push(`  ${score.assumedVsActual}`)
   out.push('')
-  out.push(`  ⚑ Headline risk: ${score.headlineRisk}`)
+  out.push(`  Headline risk: ${score.headlineRisk}`)
   out.push('')
   out.push(`  ${score.summary}`)
   out.push('')

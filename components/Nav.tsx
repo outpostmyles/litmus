@@ -44,7 +44,7 @@ export function Nav() {
           </span>
           <span className="leading-none">
             <span className="block text-[1.05rem] font-semibold tracking-[0.34em] text-fg">LITMUS</span>
-            <span className="label mt-1 block">resolution-risk scanner</span>
+            <span className="label mt-1 hidden sm:block">resolution-risk scanner</span>
           </span>
         </Link>
 
@@ -55,7 +55,7 @@ export function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`rounded-lg px-3.5 py-1.5 text-sm transition-colors ${
+                className={`rounded-lg px-3.5 py-1.5 text-sm outline-none transition-colors focus-visible:ring-1 focus-visible:ring-brand/50 ${
                   active ? 'bg-white/[0.06] text-fg' : 'text-muted hover:text-fg'
                 }`}
               >

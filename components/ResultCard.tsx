@@ -72,11 +72,8 @@ export function ResultCard({ r }: { r: ScoreResult }) {
               </span>
             )}
             {edge && (
-              <span
-                className="mono rounded-md px-2.5 py-1 text-xs font-medium"
-                style={{ background: 'rgba(103,232,249,0.14)', color: '#67e8f9' }}
-              >
-                ⚡ edge {act} · {edge.label}
+              <span className="mono rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
+                edge {act} · {edge.label}
               </span>
             )}
           </div>
@@ -91,10 +88,7 @@ export function ResultCard({ r }: { r: ScoreResult }) {
           </div>
           <div>
             <div className="label">headline risk</div>
-            <p className="mt-2 text-[1.08rem] leading-relaxed text-fg">
-              <span style={{ color }}>⚑ </span>
-              {r.headlineRisk}
-            </p>
+            <p className="mt-2 text-[1.08rem] leading-relaxed text-fg">{r.headlineRisk}</p>
             <p className="mt-4 text-[0.97rem] leading-relaxed text-muted">{r.summary}</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Meta label="source of truth" value={r.namedSource ?? '— none named —'} warn={!r.namedSource} />
@@ -116,7 +110,7 @@ export function ResultCard({ r }: { r: ScoreResult }) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 sm:px-8">
         <details className="group min-w-0">
           <summary className="mono cursor-pointer list-none text-xs text-faint transition-colors hover:text-muted">
-            ▸ view scored resolution text
+view scored resolution text
           </summary>
           <p className="mono mt-3 max-w-3xl whitespace-pre-wrap text-[0.78rem] leading-relaxed text-muted">
             {r.market.resolutionText}

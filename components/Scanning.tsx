@@ -21,7 +21,7 @@ export function Scanning() {
           <div className="text-sm text-fg">Reading the resolution criteria</div>
           <div className="label mt-2">scoring five dimensions · opus-4-8</div>
         </div>
-        <div className="mt-1 w-full max-w-md space-y-3">
+        <div aria-hidden className="mt-1 w-full max-w-md space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="track h-2 w-full">
               <div className="shimmer h-full w-full" style={{ animationDelay: `${i * 0.18}s` }} />
