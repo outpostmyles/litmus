@@ -51,6 +51,16 @@ interface Payload {
   unscoredCount: number
 }
 
+interface Alert {
+  hash: string
+  question: string
+  platform: string
+  daysUntil: number | null
+  combined: number | null
+  priceYes: number | null
+  present: boolean
+}
+
 const BANDS: (RiskBand | 'all')[] = ['all', 'severe', 'high', 'elevated', 'moderate', 'low']
 
 function compact(n: number): string {
@@ -106,22 +116,34 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [watched, setWatched] = useState<Set<string>>(new Set())
+  const [alerts, setAlerts] = useState<{ closingSoon: Alert[]; changed: Alert[] }>({ closingSoon: [], changed: [] })
+
   const [platform, setPlatform] = useState<'all' | 'Kalshi' | 'Polymarket'>('all')
   const [category, setCategory] = useState('all')
   const [band, setBand] = useState<RiskBand | 'all'>('all')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<'risk' | 'edge' | 'volume' | 'closing'>('risk')
   const [edgesOnly, setEdgesOnly] = useState(false)
+  const [watchOnly, setWatchOnly] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/catalog', { cache: 'no-store' })
-      const json = (await res.json()) as Payload
-      if (!res.ok) throw new Error('Failed to load catalog.')
-      setData(json)
+      const [cRes, wRes] = await Promise.all([
+        fetch('/api/catalog', { cache: 'no-store' }),
+        fetch('/api/watchlist', { cache: 'no-store' }),
+      ])
+      const cj = (await cRes.json()) as Payload
+      if (!cRes.ok) throw new Error('Failed to load catalog.')
+      setData(cj)
+      if (wRes.ok) {
+        const wj = await wRes.json()
+        setWatched(new Set<string>(wj.hashes || []))
+        setAlerts({ closingSoon: wj.closingSoon || [], changed: wj.changed || [] })
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load.')
     } finally {
@@ -131,6 +153,30 @@ export function Dashboard() {
   useEffect(() => {
     load()
   }, [])
+
+  async function toggleWatch(it: Item) {
+    const on = !watched.has(it.rulebookHash)
+    setWatched((prev) => {
+      const n = new Set(prev)
+      if (on) n.add(it.rulebookHash)
+      else n.delete(it.rulebookHash)
+      return n
+    })
+    try {
+      await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ hash: it.rulebookHash, action: on ? 'add' : 'remove', question: it.question, platform: it.platform }),
+      })
+      const r = await fetch('/api/watchlist', { cache: 'no-store' })
+      if (r.ok) {
+        const wj = await r.json()
+        setAlerts({ closingSoon: wj.closingSoon || [], changed: wj.changed || [] })
+      }
+    } catch {
+      /* keep optimistic state */
+    }
+  }
 
   const items = data?.items ?? []
   const categories = useMemo(() => ['all', ...Array.from(new Set(items.map((i) => i.category))).sort()], [items])
@@ -143,6 +189,7 @@ export function Dashboard() {
       if (category !== 'all' && i.category !== category) return false
       if (band !== 'all' && i.score.band !== band) return false
       if (edgesOnly && !edgeTag(i.score.literalFavors, i.priceYes)) return false
+      if (watchOnly && !watched.has(i.rulebookHash)) return false
       if (q && !i.question.toLowerCase().includes(q) && !i.score.headlineRisk.toLowerCase().includes(q)) return false
       return true
     })
@@ -162,7 +209,9 @@ export function Dashboard() {
       return b.score.combined - a.score.combined
     })
     return out
-  }, [items, platform, category, band, query, sort, edgesOnly])
+  }, [items, platform, category, band, query, sort, edgesOnly, watchOnly, watched])
+
+  const hasAlerts = alerts.closingSoon.length > 0 || alerts.changed.length > 0
 
   return (
     <div>
@@ -215,11 +264,20 @@ export function Dashboard() {
             ⚡ edges{edgeCount ? ` (${edgeCount})` : ''}
           </button>
 
+          <button
+            onClick={() => setWatchOnly((v) => !v)}
+            className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+              watchOnly ? 'border-amber-400/50 bg-amber-400/10 text-amber-300' : 'border-line text-muted hover:text-fg'
+            }`}
+          >
+            ★ watch{watched.size ? ` (${watched.size})` : ''}
+          </button>
+
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="search…"
-            className="mono min-w-[7rem] flex-1 rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
+            className="mono min-w-[6rem] flex-1 rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
           />
 
           <select
@@ -256,6 +314,25 @@ export function Dashboard() {
         )}
       </div>
 
+      {hasAlerts && (
+        <div className="mt-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] px-4 py-3">
+          <div className="mono text-[0.7rem] uppercase tracking-wider text-amber-300">⏰ alerts</div>
+          <div className="mt-1.5 space-y-1 text-sm">
+            {alerts.closingSoon.map((a) => (
+              <div key={a.hash} className="text-fg/90">
+                <span className="mono text-amber-300">{a.daysUntil === 0 ? 'today' : a.daysUntil + 'd'}</span> · {a.question}
+                {a.combined != null && <span className="text-faint"> · risk {a.combined}</span>}
+              </div>
+            ))}
+            {alerts.changed.map((a) => (
+              <div key={a.hash} className="text-rose-300">
+                ⚠ rules changed / closed · {a.question}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {error && (
         <p className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>
       )}
@@ -273,15 +350,18 @@ export function Dashboard() {
         {filtered.map((it, rank) => {
           const color = riskColor(it.score.combined)
           const isOpen = expanded === it.rulebookHash
+          const isWatched = watched.has(it.rulebookHash)
           const closes = closesIn(it.closeDate)
           const price = fmtPrice(it.priceYes)
           const edge = edgeTag(it.score.literalFavors, it.priceYes)
           const act = edge ? actionability(it.score.combined, edge, it.closeDate) : 0
           return (
             <div key={it.rulebookHash}>
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setExpanded(isOpen ? null : it.rulebookHash)}
-                className="glass relative flex w-full items-center gap-4 overflow-hidden rounded-2xl px-4 py-3.5 text-left transition-colors hover:bg-white/[0.02] sm:px-5"
+                className="glass relative flex cursor-pointer items-center gap-4 overflow-hidden rounded-2xl px-4 py-3.5 transition-colors hover:bg-white/[0.02] sm:px-5"
               >
                 <div className="absolute left-0 top-0 h-full w-1" style={{ background: color }} />
                 <div className="mono w-5 shrink-0 text-center text-sm text-faint">{rank + 1}</div>
@@ -311,8 +391,20 @@ export function Dashboard() {
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
                   <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">⚑ {it.score.headlineRisk}</div>
                 </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleWatch(it)
+                  }}
+                  aria-label={isWatched ? 'unwatch' : 'watch'}
+                  className={`shrink-0 px-1 text-lg leading-none transition-colors ${
+                    isWatched ? 'text-amber-300' : 'text-faint hover:text-amber-300'
+                  }`}
+                >
+                  {isWatched ? '★' : '☆'}
+                </button>
                 <div className={`mono shrink-0 text-faint transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</div>
-              </button>
+              </div>
 
               {isOpen && (
                 <motion.div
