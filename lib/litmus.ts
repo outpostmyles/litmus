@@ -69,6 +69,34 @@ export function edgeTag(
   return null
 }
 
+/** Days until close (negative = already past), or null. */
+export function daysUntil(closeDate?: string | null): number | null {
+  if (!closeDate) return null
+  const t = new Date(closeDate).getTime()
+  if (Number.isNaN(t)) return null
+  return (t - Date.now()) / 86_400_000
+}
+
+function timeFactor(days: number | null): number {
+  if (days == null) return 0.3
+  if (days < 0) return 0.05
+  if (days <= 30) return 1
+  if (days <= 90) return 0.8
+  if (days <= 365) return 0.5
+  if (days <= 730) return 0.25
+  return 0.1
+}
+
+/**
+ * 0–100 "is this actually tradeable" score for an edge: combines how dislocated
+ * the price is (edge strength), how soon it resolves (near-term beats a 2099
+ * lottery), and how real the text trap is (resolution risk).
+ */
+export function actionability(combined: number, edge: Edge | null, closeDate?: string | null): number {
+  if (!edge) return 0
+  return Math.round(100 * edge.strength * timeFactor(daysUntil(closeDate)) * (combined / 100))
+}
+
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
 
 /** Hue sweep: emerald (low) → amber (mid) → rose (high), the short way through red. */

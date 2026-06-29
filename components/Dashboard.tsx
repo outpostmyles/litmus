@@ -6,6 +6,7 @@ import {
   riskColor,
   BAND_LABEL,
   edgeTag,
+  actionability,
   type RiskBand,
   type ScoreResult,
   type DimensionResult,
@@ -153,11 +154,9 @@ export function Dashboard() {
         return ta - tb
       }
       if (sort === 'edge') {
-        const ea = edgeTag(a.score.literalFavors, a.priceYes)
-        const eb = edgeTag(b.score.literalFavors, b.priceYes)
-        if (ea && eb) return eb.strength - ea.strength
-        if (ea) return -1
-        if (eb) return 1
+        const aa = actionability(a.score.combined, edgeTag(a.score.literalFavors, a.priceYes), a.closeDate)
+        const ab = actionability(b.score.combined, edgeTag(b.score.literalFavors, b.priceYes), b.closeDate)
+        if (aa !== ab) return ab - aa
         return b.score.combined - a.score.combined
       }
       return b.score.combined - a.score.combined
@@ -277,6 +276,7 @@ export function Dashboard() {
           const closes = closesIn(it.closeDate)
           const price = fmtPrice(it.priceYes)
           const edge = edgeTag(it.score.literalFavors, it.priceYes)
+          const act = edge ? actionability(it.score.combined, edge, it.closeDate) : 0
           return (
             <div key={it.rulebookHash}>
               <button
@@ -303,7 +303,9 @@ export function Dashboard() {
                     {closes && <span className="text-faint/70">{closes}</span>}
                     {!it.score.namedSource && <span className="text-rose-400/80">no source</span>}
                     {edge && (
-                      <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">⚡ {edge.label}</span>
+                      <span className="rounded bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">
+                        ⚡ act {act} · {edge.label}
+                      </span>
                     )}
                   </div>
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>

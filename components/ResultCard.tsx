@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { riskColor, edgeTag, type ScoreResult } from '@/lib/litmus'
+import { riskColor, edgeTag, actionability, type ScoreResult } from '@/lib/litmus'
 import { RiskGauge } from './RiskGauge'
 import { DimensionRow } from './DimensionRow'
 
@@ -34,6 +34,7 @@ export function ResultCard({ r }: { r: ScoreResult }) {
   const color = riskColor(r.combined)
   const closes = fmtDate(r.market.closeDate)
   const edge = edgeTag(r.literalFavors, r.market.priceYes)
+  const act = edge ? actionability(r.combined, edge, r.market.closeDate) : 0
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -75,7 +76,7 @@ export function ResultCard({ r }: { r: ScoreResult }) {
                 className="mono rounded-md px-2.5 py-1 text-xs font-medium"
                 style={{ background: 'rgba(103,232,249,0.14)', color: '#67e8f9' }}
               >
-                ⚡ edge · {edge.label}
+                ⚡ edge {act} · {edge.label}
               </span>
             )}
           </div>
