@@ -4,9 +4,21 @@ import { getConfig } from '../lib/env'
 import { scoreMarket, type LitmusScore } from '../engine/score'
 import { loadFixtures, isTextDetectable, type Fixture } from './fixtures'
 
-/** A market counts as "flagged" if its combined risk is at least this. */
-const FLAG_THRESHOLD = 50
-/** A dimension counts as "flagged" (the engine found that specific problem) at this. */
+/**
+ * A market counts as "flagged" if its combined risk is at least this. 45 is the
+ * "elevated" band boundary defined in src/engine/weights.ts (riskBand) — a cutoff set by
+ * the scoring scale itself, NOT chosen to optimize this backtest. The live tracker
+ * (src/track/store.ts isFlagged) uses the same 45, so the backtest and production agree
+ * on what "flagged" means. The full threshold sweep below is printed so the choice is
+ * auditable, not cherry-picked.
+ */
+const FLAG_THRESHOLD = 45
+/**
+ * A single dimension counts as "flagged" (the engine found that specific problem) at ≥50.
+ * This is a deliberately STRICTER bar than the 45 market-level boundary: reason-precision
+ * should only credit the engine for dimensions it flagged with clear conviction, not ones
+ * that merely brushed the elevated line. Different question, so a different number.
+ */
 const DIM_FLAG = 50
 /** How many markets to score at once. Each call uses adaptive thinking, so keep it modest. */
 const CONCURRENCY = 4
@@ -114,14 +126,25 @@ async function main(): Promise<void> {
   const meanDetect = detect.length ? Math.round(detect.reduce((s, r) => s + r.score.combined, 0) / detect.length) : 0
   const meanControl = control.length ? Math.round(control.reduce((s, r) => s + r.score.combined, 0) / control.length) : 0
 
-  // Reason precision (threshold-independent): did the engine flag the SPECIFIC dimensions each dispute is known for?
+  // Reason precision: did the engine flag the SPECIFIC dimensions each dispute is known for?
+  // Reported two ways — over ALL scored cases (threshold-independent), and over only the
+  // markets flagged at FLAG_THRESHOLD (so the "on flagged" figure tracks the same 45 cutoff
+  // used everywhere else, instead of drifting onto a stale threshold).
   let dimNum = 0
   let dimDen = 0
+  let dimNumFlagged = 0
+  let dimDenFlagged = 0
   for (const r of scored) {
     const flaggedDims = new Set(r.score.dimensions.filter((d) => d.score >= DIM_FLAG).map((d) => d.key))
+    const marketFlagged = r.score.combined >= FLAG_THRESHOLD
     for (const d of r.fixture.label.expectedDimensions) {
       dimDen += 1
-      if (flaggedDims.has(d as never)) dimNum += 1
+      const hit = flaggedDims.has(d as never)
+      if (hit) dimNum += 1
+      if (marketFlagged) {
+        dimDenFlagged += 1
+        if (hit) dimNumFlagged += 1
+      }
     }
   }
 
@@ -129,7 +152,8 @@ async function main(): Promise<void> {
     `\n  Mean risk — detectable disputes: ${meanDetect}   control: ${meanControl}   (separation = ${meanDetect - meanControl})`,
   )
   console.log(
-    `  Reason precision: engine independently flagged ${dimNum}/${dimDen} (${pct(dimNum, dimDen)}) of the dimensions each dispute is known for`,
+    `  Reason precision: engine independently flagged ${dimNum}/${dimDen} (${pct(dimNum, dimDen)}) of the dimensions each dispute is known for` +
+      ` — ${dimNumFlagged}/${dimDenFlagged} (${pct(dimNumFlagged, dimDenFlagged)}) on the markets it flagged (≥${FLAG_THRESHOLD})`,
   )
   if (results.some((r) => r.error)) {
     console.log(`  ${results.filter((r) => r.error).length} case(s) errored and were excluded.`)
@@ -147,7 +171,7 @@ async function main(): Promise<void> {
       control: control.length,
       meanDetect,
       meanControl,
-      reasonPrecision: { hit: dimNum, of: dimDen },
+      reasonPrecision: { hit: dimNum, of: dimDen, onFlagged: { hit: dimNumFlagged, of: dimDenFlagged } },
       recallByThreshold: THRESHOLDS.map((T) => ({
         threshold: T,
         detectable: detect.filter((r) => r.score.combined >= T).length,

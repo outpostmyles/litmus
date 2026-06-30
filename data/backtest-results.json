@@ -1,0 +1,40 @@
+{
+  "provenance": "Recorded results of the first backtest run (2026-06-27), transcribed from docs/BACKTEST.md so the reported numbers are verifiable without an API key. This summary carries the per-case combined score, band, and reason-hit counts. Per-dimension scores are not included here; a fresh `npm run backtest` overwrites this file with the full per-dimension detail.",
+  "ranAt": "2026-06-27",
+  "model": "claude-opus-4-8",
+  "flagThreshold": 45,
+  "flagThresholdNote": "45 = the 'elevated' band boundary in src/engine/weights.ts (riskBand); the same cutoff src/track/store.ts isFlagged uses in production.",
+  "dimFlag": 50,
+  "summary": {
+    "total": 13,
+    "detectable": 12,
+    "control": 1,
+    "recall": { "flagged": 10, "of": 12, "rate": 0.833, "ci95": [0.552, 0.953] },
+    "controlFlagged": { "flagged": 0, "of": 1, "ci95": [0.0, 0.793] },
+    "meanDetect": 57,
+    "meanControl": 29,
+    "separation": 28,
+    "reasonPrecision": { "hit": 28, "of": 51, "rate": 0.549, "onFlagged": { "hit": 28, "of": 41, "rate": 0.683 } },
+    "recallByThreshold": [
+      { "threshold": 45, "detectable": 10, "control": 0, "recall": 0.833, "ci95": [0.552, 0.953] },
+      { "threshold": 50, "detectable": 9, "control": 0, "recall": 0.75, "ci95": [0.468, 0.911] },
+      { "threshold": 60, "detectable": 4, "control": 0, "recall": 0.333, "ci95": [0.138, 0.609] },
+      { "threshold": 65, "detectable": 4, "control": 0, "recall": 0.333, "ci95": [0.138, 0.609] }
+    ]
+  },
+  "cases": [
+    { "caseId": "case-06", "marketTitle": "Zelenskyy wears a suit before July", "platform": "polymarket", "detect": "text", "combined": 73, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
+    { "caseId": "case-09", "marketTitle": "TikTok banned in US before May 2025", "platform": "polymarket", "detect": "text", "combined": 74, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
+    { "caseId": "case-11", "marketTitle": "Barron Trump involved with $DJT token", "platform": "polymarket", "detect": "text", "combined": 73, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
+    { "caseId": "case-13", "marketTitle": "US invades Venezuela", "platform": "polymarket", "detect": "text", "combined": 72, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
+    { "caseId": "case-10", "marketTitle": "OceanGate Titan found by June 23", "platform": "polymarket", "detect": "text", "combined": 58, "band": "elevated", "reasonHit": { "hit": 3, "of": 4 } },
+    { "caseId": "case-07", "marketTitle": "Ukraine agrees to Trump mineral deal", "platform": "polymarket", "detect": "text", "combined": 54, "band": "elevated", "reasonHit": { "hit": 2, "of": 4 } },
+    { "caseId": "case-01", "marketTitle": "Khamenei out as Supreme Leader", "platform": "kalshi", "detect": "text", "combined": 53, "band": "elevated", "reasonHit": { "hit": 2, "of": 5 } },
+    { "caseId": "case-12", "marketTitle": "Ethereum ETF approved by May 31 2024", "platform": "polymarket", "detect": "text", "combined": 53, "band": "elevated", "reasonHit": { "hit": 3, "of": 4 } },
+    { "caseId": "case-02", "marketTitle": "Cardi B performs at Super Bowl LX", "platform": "kalshi", "detect": "text", "combined": 51, "band": "elevated", "reasonHit": { "hit": 1, "of": 4 } },
+    { "caseId": "case-08", "marketTitle": "MicroStrategy sells any BTC by May 31", "platform": "polymarket", "detect": "text", "combined": 47, "band": "elevated", "reasonHit": { "hit": 1, "of": 4 } },
+    { "caseId": "case-04", "marketTitle": "2025 Oscars viewership over ~19.5M", "platform": "kalshi", "detect": "text", "combined": 42, "band": "moderate", "reasonHit": { "hit": 0, "of": 4 } },
+    { "caseId": "case-14", "marketTitle": "Cardi B performs at Super Bowl LX", "platform": "polymarket", "detect": "text", "combined": 30, "band": "moderate", "reasonHit": { "hit": 0, "of": 4 } },
+    { "caseId": "case-03", "marketTitle": "49ers over 10.5 wins", "platform": "kalshi", "detect": "ctrl", "combined": 29, "band": "moderate", "reasonHit": { "hit": 0, "of": 2 } }
+  ]
+}

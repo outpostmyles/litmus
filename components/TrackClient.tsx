@@ -19,15 +19,43 @@ interface Row {
   edge?: { result: 'win' | 'loss' | 'push'; pnl: number } | null
 }
 
+interface Interval {
+  low: number
+  high: number
+}
 interface Payload {
+  minSample: number
   counts: { tracked: number; resolved: number; pending: number }
-  sim: { wins: number; losses: number; pushes: number; pnl: number; decided: number; winRate: number | null }
-  calibration: { tp: number; fp: number; fn: number; tn: number; recall: number | null; precision: number | null }
+  sim: {
+    wins: number
+    losses: number
+    pushes: number
+    pnl: number
+    decided: number
+    winRate: number | null
+    winRateCI: Interval | null
+    enoughSample: boolean
+  }
+  calibration: {
+    tp: number
+    fp: number
+    fn: number
+    tn: number
+    graded: number
+    recall: number | null
+    recallN: number
+    recallCI: Interval | null
+    precision: number | null
+    precisionN: number
+    precisionCI: Interval | null
+    enoughSample: boolean
+  }
   resolvedRows: Row[]
   pendingRows: Row[]
 }
 
 const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%')
+const ci = (i: Interval | null) => (i ? `95% CI ${pct(i.low)}–${pct(i.high)}` : '')
 const cents = (p: number | null | undefined) => (p == null ? '—' : Math.round(p * 100) + '¢')
 const signed = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2)
 function closesIn(iso: string | null): string {
@@ -91,7 +119,7 @@ export function TrackClient() {
   if (error) return <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>
   if (!data) return null
 
-  const { counts, sim, calibration, resolvedRows, pendingRows } = data
+  const { minSample, counts, sim, calibration, resolvedRows, pendingRows } = data
   const pnlColor = sim.pnl > 0 ? 'text-emerald-300' : sim.pnl < 0 ? 'text-rose-300' : 'text-fg'
 
   return (
@@ -99,7 +127,7 @@ export function TrackClient() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat
           label="edge simulation"
-          foot="1-unit paper trade on each flagged edge, entered at the price when flagged."
+          foot="1-unit paper trade on each flagged edge, entered at the open-market price when flagged."
         >
           {sim.decided > 0 ? (
             <div className="flex items-baseline justify-between">
@@ -111,20 +139,33 @@ export function TrackClient() {
           ) : (
             <span className="text-sm text-muted">no edges resolved yet</span>
           )}
-          {sim.decided > 0 && (
-            <div className="mono mt-1 text-xs text-muted">
-              {pct(sim.winRate)} win rate{sim.pushes ? ` · ${sim.pushes} push` : ''}
-            </div>
-          )}
+          {sim.decided > 0 &&
+            (sim.enoughSample ? (
+              <div className="mono mt-1 text-xs text-muted">
+                {pct(sim.winRate)} win rate · {ci(sim.winRateCI)}
+                {sim.pushes ? ` · ${sim.pushes} push` : ''}
+              </div>
+            ) : (
+              <div className="mono mt-1 text-xs text-faint">
+                {sim.decided}/{minSample} decided — win rate reported once the sample is real
+              </div>
+            ))}
         </Stat>
 
         <Stat label="risk calibration" foot="does a high score actually predict a surprising resolution?">
-          {counts.resolved > 0 ? (
+          {calibration.graded > 0 ? (
             <>
-              <span className="mono text-3xl font-semibold text-fg">{pct(calibration.recall)}</span>
+              {calibration.enoughSample ? (
+                <>
+                  <span className="mono text-3xl font-semibold text-fg">{pct(calibration.recall)}</span>
+                  <div className="mono mt-1 text-xs text-muted">recall · {ci(calibration.recallCI)}</div>
+                </>
+              ) : (
+                <span className="mono text-lg font-semibold text-faint">building sample</span>
+              )}
               <div className="mono mt-1 text-xs text-muted">
-                caught {calibration.tp} of {calibration.tp + calibration.fn} surprises · {calibration.fp} false alarm
-                {calibration.fp === 1 ? '' : 's'}
+                caught {calibration.tp} of {calibration.recallN} surprises · {calibration.fp} false alarm
+                {calibration.fp === 1 ? '' : 's'} · {calibration.graded} resolved
               </div>
             </>
           ) : (

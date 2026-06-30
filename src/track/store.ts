@@ -61,11 +61,15 @@ export type Surprise = 'surprise' | 'clean' | 'tossup'
 /**
  * Did the market resolve differently than the crowd's confident price implied?
  * other/void resolutions count as surprises; ~50/50 prices are tossups (excluded).
+ *
+ * Calibration is judged against the price we LOCKED at snapshot (entryPriceYes) — never
+ * the final price. Falling back to finalPriceYes would be look-ahead: it would grade the
+ * "surprise" against a price that already knew the outcome. No entry price → ungradeable.
  */
 export function classifySurprise(e: TrackEntry): Surprise | null {
   if (!e.settled || !e.outcome) return null
   if (e.outcome === 'other' || e.outcome === 'void') return 'surprise'
-  const p = e.entryPriceYes ?? e.finalPriceYes
+  const p = e.entryPriceYes
   if (p == null) return null
   if (p > 0.35 && p < 0.65) return 'tossup'
   if (e.outcome === 'yes') return p <= 0.35 ? 'surprise' : 'clean'

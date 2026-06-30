@@ -1,7 +1,14 @@
 import { loadTrack, classifySurprise, edgeResult, isFlagged, type TrackEntry } from '@/src/track/store'
+import { wilson } from '@/src/lib/stats'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/**
+ * Below this many decided cases we don't report a rate — a 2-0 record is noise, not a
+ * track record. The UI shows a "building sample" state until the count crosses this.
+ */
+export const MIN_SAMPLE = 20
 
 function rowOf(e: TrackEntry) {
   return {
@@ -43,7 +50,6 @@ export function GET() {
   let fp = 0
   let fn = 0
   let tn = 0
-  const bandStats: Record<string, { surprise: number; total: number }> = {}
   for (const e of resolved) {
     const s = classifySurprise(e)
     if (s === null || s === 'tossup') continue
@@ -52,10 +58,6 @@ export function GET() {
     else if (flagged && s === 'clean') fp++
     else if (!flagged && s === 'surprise') fn++
     else tn++
-    const bs = bandStats[e.band] ?? { surprise: 0, total: 0 }
-    bs.total++
-    if (s === 'surprise') bs.surprise++
-    bandStats[e.band] = bs
   }
 
   const resolvedRows = resolved
@@ -70,17 +72,41 @@ export function GET() {
         (b.closeDate ? new Date(b.closeDate).getTime() : Infinity),
     )
 
+  const decided = wins + losses
+  const recallN = tp + fn
+  const precisionN = tp + fp
+  const graded = tp + fp + fn + tn
+
   return Response.json({
+    minSample: MIN_SAMPLE,
     counts: { tracked: entries.length, resolved: resolved.length, pending: pending.length },
-    sim: { wins, losses, pushes, pnl, decided: wins + losses, winRate: wins + losses ? wins / (wins + losses) : null },
+    sim: {
+      wins,
+      losses,
+      pushes,
+      pnl,
+      decided,
+      winRate: decided ? wins / decided : null,
+      winRateCI: decided ? wilson(wins, decided) : null,
+      enoughSample: decided >= MIN_SAMPLE,
+    },
     calibration: {
       tp,
       fp,
       fn,
       tn,
-      recall: tp + fn ? tp / (tp + fn) : null,
-      precision: tp + fp ? tp / (tp + fp) : null,
-      bandStats,
+      graded,
+      recall: recallN ? tp / recallN : null,
+      recallN,
+      recallCI: recallN ? wilson(tp, recallN) : null,
+      precision: precisionN ? tp / precisionN : null,
+      precisionN,
+      precisionCI: precisionN ? wilson(tp, precisionN) : null,
+      // Gate the recall RATE on recall's own denominator (the count of surprises), not on
+      // total graded — else a matrix dominated by true-negatives would surface a recall
+      // percentage computed from a handful of surprises. Same discipline as the edge tile,
+      // which gates win-rate on `decided`.
+      enoughSample: recallN >= MIN_SAMPLE,
     },
     resolvedRows,
     pendingRows,

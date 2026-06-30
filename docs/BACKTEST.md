@@ -1,11 +1,15 @@
 # Litmus backtest
 
 **Across 12 already-disputed prediction markets whose ambiguity was present in the
-resolution text, Litmus retroactively flagged 10 (83%) as elevated-or-higher risk —
-while leaving the one control case unflagged. Mean risk on disputed markets was 57 vs
-29 on the control: a 28-point separation.**
+resolution text, Litmus retroactively flagged 10 as elevated-or-higher risk — a recall of
+10/12 = 83% (95% CI 55–95%) — while leaving the one control case unflagged. Mean risk on
+disputed markets was 57 vs 29 on the control: a 28-point separation.**
 
 Run: `npm run backtest` · Model: `claude-opus-4-8` · First run: 2026-06-27
+
+> Read the [Limits](#limits-read-this-before-quoting-the-number) section before quoting
+> the 83%. It is a real result on a small, mostly-positive set — recall is meaningful;
+> precision in the wild is not yet measured.
 
 ## Why this is the real validation
 
@@ -21,6 +25,15 @@ The gold-set is split by an honest control:
 - **Control** — the market mis-settled for a reason *outside* the text (e.g. a grading
   error). The text was clean. The engine *should not* flag these. A tool that flags
   everything is useless; the control is what proves it discriminates.
+
+## What "flagged" means (pre-registered)
+
+A market is **flagged** when its combined risk is **≥ 45**. That is the "elevated" band
+boundary defined in [`src/engine/weights.ts`](../src/engine/weights.ts) (`riskBand`) — a
+cutoff set by the scoring scale itself, **not** chosen to maximize this number. The live
+tracker ([`src/track/store.ts`](../src/track/store.ts) `isFlagged`) uses the same 45, so
+the backtest and production agree on what "flagged" means. The full threshold sweep is
+printed below so the choice is auditable rather than cherry-picked.
 
 ## The gold-set (13 cases)
 
@@ -50,23 +63,25 @@ per-market rules could not be recovered, and we won't reconstruct rules from hin
 
 `detect = text` → ambiguity present in the rules (should flag). `ctrl` → surprise came
 from outside the text (should not flag). `reason-hit` = how many of the dimensions this
-dispute is independently known for the engine also flagged (≥50).
+dispute is independently known for the engine also flagged (a single dimension counts as
+flagged at ≥50 — a deliberately stricter bar than the 45 market-level boundary).
 
 ### Recall by threshold
 
-A market is "flagged" if combined risk ≥ T.
+A market is "flagged" if combined risk ≥ T. Recall is over the 12 detectable disputes.
 
-| T | detectable disputes | control |
-|---|---|---|
-| ≥45 | **10/12 (83%)** | 0/1 |
-| ≥50 | 9/12 (75%) | 0/1 |
-| ≥60 | 4/12 (33%) | 0/1 |
-| ≥65 | 4/12 (33%) | 0/1 |
+| T | detectable disputes | recall (95% CI) | control |
+|---|---|---|---|
+| **≥45** *(pre-registered)* | **10/12** | **83% (55–95%)** | 0/1 |
+| ≥50 | 9/12 | 75% (47–91%) | 0/1 |
+| ≥60 | 4/12 | 33% (14–61%) | 0/1 |
+| ≥65 | 4/12 | 33% (14–61%) | 0/1 |
 
-- **Mean risk separation:** detectable disputes 57 vs control 29 (gap 28).
+- **Mean risk separation:** detectable disputes 57 vs control 29 (gap 28). With n=1
+  control this is a direction, not a tested effect — see Limits.
 - **Reason precision:** the engine independently flagged 28/51 (55%) of the specific
-  dimensions each dispute is known for — and 27/37 (73%) on the disputes it flagged.
-  The control case correctly contributes 0/2 (we *want* its dimensions unflagged).
+  dimensions each dispute is known for — and 28/41 (68%) on the 10 markets it flagged
+  (≥45). The control case correctly contributes 0/2 (we *want* its dimensions unflagged).
 
 ### The two misses (honest)
 
@@ -80,9 +95,41 @@ A market is "flagged" if combined risk ≥ T.
 We do **not** tune the prompt against these, since this is the set the number is reported
 on. Improving recall means expanding the gold-set with *new* held-out cases.
 
+## Limits (read this before quoting the number)
+
+This is an honest small-sample result, not a finished evaluation. What it does and does
+not support:
+
+- **Small n, wide interval.** 10/12 has a 95% Wilson interval of 55–95%. The point
+  estimate is 83%; the *evidence* is "probably good, not precisely pinned." Quote the
+  interval, not just the headline.
+- **Recall, not precision.** The set is 12 positives and **one** negative. We can measure
+  how many real disputes we catch (recall); we **cannot** yet measure how often we flag a
+  market that resolves cleanly (precision / false-positive rate) — that needs a
+  representative sample of clean markets, which is the next validation step. On the live
+  board ~40% of markets score ≥45, so if true disputes are rare, real-world precision
+  could be much lower than recall. Do not claim precision from this set.
+- **The control is a single case.** "0/1 on the control" has a 95% CI of 0–79% — it is
+  consistent with discrimination but proves little on its own. One clean case is a sanity
+  check, not a specificity measurement.
+- **World-knowledge leakage is possible.** The `literal_vs_intuitive` dimension is allowed
+  to use world knowledge to judge what a casual reader assumes. For famous resolved
+  disputes (TikTok, Zelenskyy, Ethereum ETF) the model may have seen the actual
+  controversy in training and pattern-matched the known blow-up rather than detecting
+  ambiguity cold. The fixture *text* is vetted not to leak the outcome, but the model's
+  own memory can. Out-of-time cases (markets resolving after the training cutoff) would
+  neutralize this — also on the to-do list.
+- **Single run.** These are one run's scores. Score variance across repeated runs (and how
+  often the band flips) is not yet quantified.
+
 ## Reproduce
 
 ```bash
 npm run backtest          # scores all fixtures blind, prints this table
 # full per-case output (incl. every dimension score) → data/backtest-results.json
 ```
+
+[`data/backtest-results.json`](../data/backtest-results.json) holds the recorded results
+of the first run (combined score, band, and reason-hits per case) so the numbers above can
+be checked without an API key. A fresh `npm run backtest` overwrites it with the full
+per-dimension detail.
