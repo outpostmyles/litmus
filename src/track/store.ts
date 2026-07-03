@@ -29,6 +29,14 @@ export interface TrackEntry {
   finalPriceYes?: number | null
   /** How the outcome was derived from the platform API — audit trail for every grade. */
   resolvedVia?: string
+  /**
+   * Evidence that resolution went sideways IN FLIGHT (e.g. "uma=disputed 2026-07-03"),
+   * recorded the first time settle observes it. Persists after final settlement — a
+   * market that was disputed and then resolved is exactly what this tool predicts.
+   */
+  disputeSeen?: string
+  /** Which edge-rule generation locked this prediction (3 = confidence+crowd-gated). */
+  edgeVersion?: number
 }
 
 export type Track = Record<string, TrackEntry>
@@ -82,6 +90,31 @@ export interface EdgeResult {
   result: 'win' | 'loss' | 'push'
   /** P&L on a 1-unit paper trade on the rules-favored side, entered at snapshot price. */
   pnl: number
+}
+
+/**
+ * PROCESS outcome — did the RESOLUTION go sideways, regardless of which side won?
+ * This is the tool's actual claim ("settlement goes wrong"), so it's the primary
+ * calibration target; a price-flip surprise is the secondary, rarer one.
+ *
+ *  - contested: a dispute was observed in flight, or the platform settled to "other"
+ *  - void:      the market voided
+ *  - split:     the oracle finalized without price convergence (non-binary/split result)
+ *  - delayed:   settled >7d after close (buffered for our daily polling cadence)
+ *  - clean:     none of the above
+ */
+export type ProcessOutcome = 'clean' | 'delayed' | 'contested' | 'split' | 'void'
+
+export function processOutcome(e: TrackEntry): ProcessOutcome | null {
+  if (!e.settled) return null
+  if (e.outcome === 'void') return 'void'
+  if (e.disputeSeen || e.outcome === 'other') return 'contested'
+  if (e.resolvedVia?.includes('unconverged')) return 'split'
+  if (e.closeDate && e.resolvedAt) {
+    const lagDays = (Date.parse(e.resolvedAt) - Date.parse(e.closeDate)) / 86_400_000
+    if (Number.isFinite(lagDays) && lagDays > 7) return 'delayed'
+  }
+  return 'clean'
 }
 
 export function edgeResult(e: TrackEntry): EdgeResult | null {

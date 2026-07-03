@@ -41,6 +41,8 @@ Then return:
 - headline_risk: the single sharpest way this market could surprise its traders, in one sentence. If the market is genuinely clean, say so plainly.
 - summary: 2–4 plain-English sentences a trader could read in five seconds before committing capital. Lead with the verdict.
 
+BOILERPLATE RULE: platform-standard language that appears in nearly every market — Polymarket's "a consensus of credible reporting may also be used" fallback, Kalshi's standard review/contingency clauses, person-market death-and-departure carveouts — must NOT be scored for mere presence: it cannot distinguish one market from another. Score boilerplate by ACTIVATION: name the specific fact about THIS market's subject or timeline that makes the standard clause likely to actually bind (e.g. a death carveout in a market about an elderly leader under military threat is live; the same clause in a market about a 40-year-old governor is inert). If you cannot name an activation path, treat the clause as background and score the dimension on the market-specific text instead.
+
 Be specific and concrete; a vague "why" makes the tool useless — quote the text. Do not inflate scores for clean markets. Do not give a market a pass just because the event looks certain — a lopsided market with a sloppy clause is exactly the trap you exist to catch.`
 
 export function buildUserPrompt(market: MarketInput): string {

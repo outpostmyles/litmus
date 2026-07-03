@@ -1,40 +1,512 @@
 {
-  "provenance": "Recorded results of the first backtest run (2026-06-27), transcribed from docs/BACKTEST.md so the reported numbers are verifiable without an API key. This summary carries the per-case combined score, band, and reason-hit counts. Per-dimension scores are not included here; a fresh `npm run backtest` overwrites this file with the full per-dimension detail.",
-  "ranAt": "2026-06-27",
+  "ranAt": "2026-07-03T19:37:27.481Z",
   "model": "claude-opus-4-8",
   "flagThreshold": 45,
-  "flagThresholdNote": "45 = the 'elevated' band boundary in src/engine/weights.ts (riskBand); the same cutoff src/track/store.ts isFlagged uses in production.",
   "dimFlag": 50,
   "summary": {
     "total": 13,
     "detectable": 12,
     "control": 1,
-    "recall": { "flagged": 10, "of": 12, "rate": 0.833, "ci95": [0.552, 0.953] },
-    "controlFlagged": { "flagged": 0, "of": 1, "ci95": [0.0, 0.793] },
-    "meanDetect": 57,
-    "meanControl": 29,
-    "separation": 28,
-    "reasonPrecision": { "hit": 28, "of": 51, "rate": 0.549, "onFlagged": { "hit": 28, "of": 41, "rate": 0.683 } },
+    "meanDetect": 55,
+    "meanControl": 20,
+    "reasonPrecision": {
+      "hit": 27,
+      "of": 51,
+      "onFlagged": {
+        "hit": 27,
+        "of": 37
+      }
+    },
     "recallByThreshold": [
-      { "threshold": 45, "detectable": 10, "control": 0, "recall": 0.833, "ci95": [0.552, 0.953] },
-      { "threshold": 50, "detectable": 9, "control": 0, "recall": 0.75, "ci95": [0.468, 0.911] },
-      { "threshold": 60, "detectable": 4, "control": 0, "recall": 0.333, "ci95": [0.138, 0.609] },
-      { "threshold": 65, "detectable": 4, "control": 0, "recall": 0.333, "ci95": [0.138, 0.609] }
+      {
+        "threshold": 45,
+        "detectable": 9,
+        "control": 0
+      },
+      {
+        "threshold": 50,
+        "detectable": 9,
+        "control": 0
+      },
+      {
+        "threshold": 60,
+        "detectable": 4,
+        "control": 0
+      },
+      {
+        "threshold": 65,
+        "detectable": 4,
+        "control": 0
+      }
     ]
   },
   "cases": [
-    { "caseId": "case-06", "marketTitle": "Zelenskyy wears a suit before July", "platform": "polymarket", "detect": "text", "combined": 73, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
-    { "caseId": "case-09", "marketTitle": "TikTok banned in US before May 2025", "platform": "polymarket", "detect": "text", "combined": 74, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
-    { "caseId": "case-11", "marketTitle": "Barron Trump involved with $DJT token", "platform": "polymarket", "detect": "text", "combined": 73, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
-    { "caseId": "case-13", "marketTitle": "US invades Venezuela", "platform": "polymarket", "detect": "text", "combined": 72, "band": "high", "reasonHit": { "hit": 4, "of": 4 } },
-    { "caseId": "case-10", "marketTitle": "OceanGate Titan found by June 23", "platform": "polymarket", "detect": "text", "combined": 58, "band": "elevated", "reasonHit": { "hit": 3, "of": 4 } },
-    { "caseId": "case-07", "marketTitle": "Ukraine agrees to Trump mineral deal", "platform": "polymarket", "detect": "text", "combined": 54, "band": "elevated", "reasonHit": { "hit": 2, "of": 4 } },
-    { "caseId": "case-01", "marketTitle": "Khamenei out as Supreme Leader", "platform": "kalshi", "detect": "text", "combined": 53, "band": "elevated", "reasonHit": { "hit": 2, "of": 5 } },
-    { "caseId": "case-12", "marketTitle": "Ethereum ETF approved by May 31 2024", "platform": "polymarket", "detect": "text", "combined": 53, "band": "elevated", "reasonHit": { "hit": 3, "of": 4 } },
-    { "caseId": "case-02", "marketTitle": "Cardi B performs at Super Bowl LX", "platform": "kalshi", "detect": "text", "combined": 51, "band": "elevated", "reasonHit": { "hit": 1, "of": 4 } },
-    { "caseId": "case-08", "marketTitle": "MicroStrategy sells any BTC by May 31", "platform": "polymarket", "detect": "text", "combined": 47, "band": "elevated", "reasonHit": { "hit": 1, "of": 4 } },
-    { "caseId": "case-04", "marketTitle": "2025 Oscars viewership over ~19.5M", "platform": "kalshi", "detect": "text", "combined": 42, "band": "moderate", "reasonHit": { "hit": 0, "of": 4 } },
-    { "caseId": "case-14", "marketTitle": "Cardi B performs at Super Bowl LX", "platform": "polymarket", "detect": "text", "combined": 30, "band": "moderate", "reasonHit": { "hit": 0, "of": 4 } },
-    { "caseId": "case-03", "marketTitle": "49ers over 10.5 wins", "platform": "kalshi", "detect": "ctrl", "combined": 29, "band": "moderate", "reasonHit": { "hit": 0, "of": 2 } }
+    {
+      "caseId": "case-01",
+      "platform": "Kalshi",
+      "marketTitle": "Will Ali Khamenei be out as Supreme Leader of Iran? (KXKHAMENEIOUT-AKHA, March 1 / April 1, 2026 expirations)",
+      "textDetectable": "MIXED",
+      "combined": 58,
+      "band": "elevated",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 30
+        },
+        {
+          "key": "criteria_precision",
+          "score": 48
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 74
+        },
+        {
+          "key": "timing",
+          "score": 32
+        },
+        {
+          "key": "dispute_surface",
+          "score": 62
+        }
+      ],
+      "expectedDimensions": [
+        "literal_vs_intuitive",
+        "criteria_precision",
+        "source_clarity",
+        "dispute_surface",
+        "timing"
+      ]
+    },
+    {
+      "caseId": "case-02",
+      "platform": "Kalshi",
+      "marketTitle": "Did Cardi B perform at the Super Bowl LX halftime show?",
+      "textDetectable": "STRONG",
+      "combined": 36,
+      "band": "moderate",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 12
+        },
+        {
+          "key": "criteria_precision",
+          "score": 38
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 46
+        },
+        {
+          "key": "timing",
+          "score": 18
+        },
+        {
+          "key": "dispute_surface",
+          "score": 42
+        }
+      ],
+      "expectedDimensions": [
+        "source_clarity",
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-03",
+      "platform": "Kalshi",
+      "marketTitle": "NFL regular-season win totals (e.g., San Francisco 49ers over 10.5 wins)",
+      "textDetectable": "WEAK",
+      "combined": 20,
+      "band": "low",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 15
+        },
+        {
+          "key": "criteria_precision",
+          "score": 20
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 25
+        },
+        {
+          "key": "timing",
+          "score": 12
+        },
+        {
+          "key": "dispute_surface",
+          "score": 10
+        }
+      ],
+      "expectedDimensions": [
+        "timing",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-04",
+      "platform": "Kalshi",
+      "marketTitle": "2025 Oscars telecast viewership (over ~19.5 million viewers)",
+      "textDetectable": "STRONG",
+      "combined": 35,
+      "band": "moderate",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 28
+        },
+        {
+          "key": "criteria_precision",
+          "score": 42
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 40
+        },
+        {
+          "key": "timing",
+          "score": 15
+        },
+        {
+          "key": "dispute_surface",
+          "score": 30
+        }
+      ],
+      "expectedDimensions": [
+        "source_clarity",
+        "timing",
+        "literal_vs_intuitive",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-06",
+      "platform": "Polymarket",
+      "marketTitle": "Will Zelenskyy wear a suit before July?",
+      "textDetectable": "STRONG",
+      "combined": 77,
+      "band": "high",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 78
+        },
+        {
+          "key": "criteria_precision",
+          "score": 88
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 72
+        },
+        {
+          "key": "timing",
+          "score": 18
+        },
+        {
+          "key": "dispute_surface",
+          "score": 85
+        }
+      ],
+      "expectedDimensions": [
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "source_clarity",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-07",
+      "platform": "Polymarket",
+      "marketTitle": "Will Ukraine agree to Trump's mineral deal before April?",
+      "textDetectable": "PARTIAL",
+      "combined": 59,
+      "band": "elevated",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 42
+        },
+        {
+          "key": "criteria_precision",
+          "score": 55
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 72
+        },
+        {
+          "key": "timing",
+          "score": 30
+        },
+        {
+          "key": "dispute_surface",
+          "score": 58
+        }
+      ],
+      "expectedDimensions": [
+        "source_clarity",
+        "literal_vs_intuitive",
+        "dispute_surface",
+        "timing"
+      ]
+    },
+    {
+      "caseId": "case-08",
+      "platform": "Polymarket",
+      "marketTitle": "MicroStrategy (Strategy) sells any Bitcoin by May 31, 2026?",
+      "textDetectable": "STRONG",
+      "combined": 50,
+      "band": "elevated",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 38
+        },
+        {
+          "key": "criteria_precision",
+          "score": 55
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 48
+        },
+        {
+          "key": "timing",
+          "score": 15
+        },
+        {
+          "key": "dispute_surface",
+          "score": 60
+        }
+      ],
+      "expectedDimensions": [
+        "source_clarity",
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "timing"
+      ]
+    },
+    {
+      "caseId": "case-09",
+      "platform": "Polymarket",
+      "marketTitle": "TikTok banned in the US before May 2025?",
+      "textDetectable": "STRONG",
+      "combined": 69,
+      "band": "high",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 38
+        },
+        {
+          "key": "criteria_precision",
+          "score": 74
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 80
+        },
+        {
+          "key": "timing",
+          "score": 58
+        },
+        {
+          "key": "dispute_surface",
+          "score": 72
+        }
+      ],
+      "expectedDimensions": [
+        "literal_vs_intuitive",
+        "criteria_precision",
+        "timing",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-10",
+      "platform": "Polymarket",
+      "marketTitle": "Will the missing submarine be found by June 23? (OceanGate Titan)",
+      "textDetectable": "STRONG",
+      "combined": 55,
+      "band": "elevated",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 25
+        },
+        {
+          "key": "criteria_precision",
+          "score": 62
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 68
+        },
+        {
+          "key": "timing",
+          "score": 15
+        },
+        {
+          "key": "dispute_surface",
+          "score": 63
+        }
+      ],
+      "expectedDimensions": [
+        "literal_vs_intuitive",
+        "criteria_precision",
+        "dispute_surface",
+        "source_clarity"
+      ]
+    },
+    {
+      "caseId": "case-11",
+      "platform": "Polymarket",
+      "marketTitle": "Was Barron Trump involved with the $DJT token?",
+      "textDetectable": "STRONG",
+      "combined": 74,
+      "band": "high",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 82
+        },
+        {
+          "key": "criteria_precision",
+          "score": 76
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 55
+        },
+        {
+          "key": "timing",
+          "score": 18
+        },
+        {
+          "key": "dispute_surface",
+          "score": 88
+        }
+      ],
+      "expectedDimensions": [
+        "source_clarity",
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-12",
+      "platform": "Polymarket",
+      "marketTitle": "Ethereum ETF approved by May 31, 2024?",
+      "textDetectable": "PARTIAL",
+      "combined": 50,
+      "band": "elevated",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 22
+        },
+        {
+          "key": "criteria_precision",
+          "score": 62
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 60
+        },
+        {
+          "key": "timing",
+          "score": 25
+        },
+        {
+          "key": "dispute_surface",
+          "score": 50
+        }
+      ],
+      "expectedDimensions": [
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "source_clarity",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-13",
+      "platform": "Polymarket",
+      "marketTitle": "Will the U.S. invade Venezuela? (2025/2026 invasion market)",
+      "textDetectable": "STRONG",
+      "combined": 67,
+      "band": "high",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 72
+        },
+        {
+          "key": "criteria_precision",
+          "score": 68
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 70
+        },
+        {
+          "key": "timing",
+          "score": 22
+        },
+        {
+          "key": "dispute_surface",
+          "score": 72
+        }
+      ],
+      "expectedDimensions": [
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "source_clarity",
+        "dispute_surface"
+      ]
+    },
+    {
+      "caseId": "case-14",
+      "platform": "Polymarket",
+      "marketTitle": "Will Cardi B perform at the Super Bowl LX halftime show?",
+      "textDetectable": "STRONG",
+      "combined": 35,
+      "band": "moderate",
+      "dimensions": [
+        {
+          "key": "source_clarity",
+          "score": 15
+        },
+        {
+          "key": "criteria_precision",
+          "score": 45
+        },
+        {
+          "key": "literal_vs_intuitive",
+          "score": 35
+        },
+        {
+          "key": "timing",
+          "score": 12
+        },
+        {
+          "key": "dispute_surface",
+          "score": 40
+        }
+      ],
+      "expectedDimensions": [
+        "criteria_precision",
+        "literal_vs_intuitive",
+        "dispute_surface",
+        "source_clarity"
+      ]
+    }
   ]
 }

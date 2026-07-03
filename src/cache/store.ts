@@ -71,6 +71,10 @@ export interface CachedScore {
   literalFavorsNote?: string
   /** How confident the lean pass is in that direction (0–1). Edges require ≥0.55. */
   leanConfidence?: number
+  /** Verbatim rules span forcing the divergence — demanded when confidence ≥0.85. */
+  leanClauseQuote?: string | null
+  /** True when the current price is already consistent with a correct literal reading. */
+  leanCrowdConsistent?: boolean
 }
 
 export function loadCatalog(): CatalogEntry[] {

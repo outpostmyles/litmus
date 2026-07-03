@@ -7,6 +7,7 @@ import {
   BAND_LABEL,
   edgeTag,
   actionability,
+  liveRisk,
   ageOf,
   STALE_HOURS,
   type RiskBand,
@@ -69,6 +70,8 @@ interface Item {
     literalFavors?: LiteralFavors
     literalFavorsNote?: string
     leanConfidence?: number
+    leanClauseQuote?: string | null
+    leanCrowdConsistent?: boolean
   }
 }
 
@@ -128,6 +131,8 @@ function toResult(it: Item): ScoreResult {
     literalFavors: it.score.literalFavors ?? null,
     literalFavorsNote: it.score.literalFavorsNote ?? null,
     leanConfidence: it.score.leanConfidence ?? null,
+    leanClauseQuote: it.score.leanClauseQuote ?? null,
+    leanCrowdConsistent: it.score.leanCrowdConsistent ?? null,
     market: {
       platform: it.platform,
       question: it.question,
@@ -180,7 +185,7 @@ export function Dashboard() {
   const [category, setCategory] = useState('all')
   const [band, setBand] = useState<RiskBand | 'all'>('all')
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<'risk' | 'edge' | 'volume' | 'closing'>('risk')
+  const [sort, setSort] = useState<'risk' | 'live' | 'edge' | 'volume' | 'closing'>('live')
   const [edgesOnly, setEdgesOnly] = useState(false)
   const [watchOnly, setWatchOnly] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -237,7 +242,8 @@ export function Dashboard() {
 
   const items = data?.items ?? []
   const categories = useMemo(() => ['all', ...Array.from(new Set(items.map((i) => i.category))).sort()], [items])
-  const itemEdge = (i: Item) => edgeTag(i.score.literalFavors, i.priceYes, i.score.leanConfidence)
+  const itemEdge = (i: Item) =>
+    edgeTag(i.score.literalFavors, i.priceYes, i.score.leanConfidence, i.score.leanCrowdConsistent)
   const edgeCount = useMemo(() => items.filter((i) => itemEdge(i)).length, [items])
 
   const dataAge = ageOf(data?.dataAsOf)
@@ -262,9 +268,15 @@ export function Dashboard() {
         return ta - tb
       }
       if (sort === 'edge') {
-        const aa = actionability(a.score.combined, itemEdge(a), a.closeDate)
-        const ab = actionability(b.score.combined, itemEdge(b), b.closeDate)
+        const aa = actionability(a.score.combined, itemEdge(a), a.closeDate, a.priceYes)
+        const ab = actionability(b.score.combined, itemEdge(b), b.closeDate, b.priceYes)
         if (aa !== ab) return ab - aa
+        return b.score.combined - a.score.combined
+      }
+      if (sort === 'live') {
+        const la = liveRisk(a.score.combined, a.priceYes) ?? -1
+        const lb = liveRisk(b.score.combined, b.priceYes) ?? -1
+        if (la !== lb) return lb - la
         return b.score.combined - a.score.combined
       }
       return b.score.combined - a.score.combined
@@ -343,10 +355,11 @@ export function Dashboard() {
 
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value as 'risk' | 'edge' | 'volume' | 'closing')}
+            onChange={(e) => setSort(e.target.value as 'risk' | 'live' | 'edge' | 'volume' | 'closing')}
             className="rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none focus:ring-1 focus:ring-brand/40"
           >
-            <option value="risk">Sort: risk</option>
+            <option value="live">Sort: live risk</option>
+            <option value="risk">Sort: text hazard</option>
             <option value="edge">Sort: edge</option>
             <option value="volume">Sort: volume</option>
             <option value="closing">Sort: closing soon</option>
@@ -422,7 +435,8 @@ export function Dashboard() {
           const price = fmtPrice(it.priceYes)
           const delta = fmtDelta(it.delta1d)
           const edge = itemEdge(it)
-          const act = edge ? actionability(it.score.combined, edge, it.closeDate) : 0
+          const act = edge ? actionability(it.score.combined, edge, it.closeDate, it.priceYes) : 0
+          const live = liveRisk(it.score.combined, it.priceYes)
           return (
             <div key={it.rulebookHash}>
               <div
@@ -457,6 +471,7 @@ export function Dashboard() {
                     <span className="text-muted">{fmtVol(it.platform, it.volume)}</span>
                     {price && <span className="text-fg/80">Yes {price}</span>}
                     {delta && <span className="text-fg/60">Δ24h {delta}</span>}
+                    {live != null && live !== it.score.combined && <span className="text-faint/80">live {live}</span>}
                     {it.marketCount > 1 && <span className="text-faint/70">×{it.marketCount}</span>}
                     {closes && <span className="text-faint/70">{closes}</span>}
                     {!it.score.namedSource && <span className="text-rose-300">no source</span>}

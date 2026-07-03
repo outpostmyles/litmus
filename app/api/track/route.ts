@@ -1,4 +1,4 @@
-import { loadTrack, classifySurprise, edgeResult, isFlagged, type TrackEntry } from '@/src/track/store'
+import { loadTrack, classifySurprise, edgeResult, isFlagged, processOutcome, type TrackEntry } from '@/src/track/store'
 import { wilson } from '@/src/lib/stats'
 
 export const runtime = 'nodejs'
@@ -23,7 +23,17 @@ function rowOf(e: TrackEntry) {
     outcome: e.outcome ?? null,
     finalPriceYes: e.finalPriceYes ?? null,
     resolvedAt: e.resolvedAt ?? null,
+    disputeSeen: e.disputeSeen ?? null,
+    process: processOutcome(e),
   }
+}
+
+/** Entry prices where a surprise is even possible — beyond this the crowd has decided. */
+const GRADEABLE_LOW = 0.1
+const GRADEABLE_HIGH = 0.9
+
+function isMidPriced(e: TrackEntry): boolean {
+  return e.entryPriceYes != null && e.entryPriceYes >= GRADEABLE_LOW && e.entryPriceYes <= GRADEABLE_HIGH
 }
 
 export function GET() {
@@ -45,19 +55,55 @@ export function GET() {
     pnl += er.pnl
   }
 
-  // Risk calibration (did flagged markets actually surprise?)
+  // Risk calibration (did flagged markets actually surprise?), split by whether the
+  // entry price even allowed a surprise: a market locked at 0.5¢ cannot flip, so
+  // grading a flag against it says nothing about the analysis.
   let tp = 0
   let fp = 0
   let fn = 0
   let tn = 0
+  let gradedMid = 0
+  let gradedExtreme = 0
   for (const e of resolved) {
     const s = classifySurprise(e)
     if (s === null || s === 'tossup') continue
+    if (isMidPriced(e)) gradedMid++
+    else gradedExtreme++
     const flagged = isFlagged(e)
     if (flagged && s === 'surprise') tp++
     else if (flagged && s === 'clean') fp++
     else if (!flagged && s === 'surprise') fn++
     else tn++
+  }
+
+  // PROCESS calibration — the tool's actual claim. Did resolution go sideways
+  // (dispute, void, split, long delay), and were those markets the flagged ones?
+  const proc = { flagged: { sideways: 0, clean: 0 }, unflagged: { sideways: 0, clean: 0 } }
+  let liveDisputes = 0
+  for (const e of resolved) {
+    const p = processOutcome(e)
+    if (!p) continue
+    const bucket = isFlagged(e) ? proc.flagged : proc.unflagged
+    if (p === 'clean') bucket.clean++
+    else bucket.sideways++
+  }
+  for (const e of pending) if (e.disputeSeen) liveDisputes++
+
+  // Crowd baseline: Brier of the locked entry price alone, vs the entry price shifted
+  // 10% toward the rules-favored side wherever an edge was locked. The falsifiable
+  // "does Litmus add information?" test — stated formula, computed only on yes/no
+  // outcomes with a locked entry.
+  let brierN = 0
+  let brierCrowd = 0
+  let brierLitmus = 0
+  for (const e of resolved) {
+    if (e.entryPriceYes == null || (e.outcome !== 'yes' && e.outcome !== 'no')) continue
+    const y = e.outcome === 'yes' ? 1 : 0
+    const p = e.entryPriceYes
+    const adj = e.edgeSide === 'yes' ? p + 0.1 * (1 - p) : e.edgeSide === 'no' ? p - 0.1 * p : p
+    brierCrowd += (p - y) ** 2
+    brierLitmus += (adj - y) ** 2
+    brierN++
   }
 
   const resolvedRows = resolved
@@ -107,7 +153,21 @@ export function GET() {
       // percentage computed from a handful of surprises. Same discipline as the edge tile,
       // which gates win-rate on `decided`.
       enoughSample: recallN >= MIN_SAMPLE,
+      gradedMid,
+      gradedExtreme,
     },
+    process: {
+      ...proc,
+      liveDisputes,
+    },
+    baseline:
+      brierN > 0
+        ? {
+            n: brierN,
+            crowd: brierCrowd / brierN,
+            litmus: brierLitmus / brierN,
+          }
+        : null,
     resolvedRows,
     pendingRows,
   })

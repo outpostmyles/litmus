@@ -5,6 +5,44 @@ import { getJson } from '../lib/http'
 const KB = process.env.KALSHI_BASE_URL || 'https://api.elections.kalshi.com/trade-api/v2'
 const GAMMA = process.env.POLYMARKET_GAMMA_URL || 'https://gamma-api.polymarket.com'
 
+/**
+ * Share of ingest slots reserved for the GRADEABLE cohort: markets closing within 90
+ * days at a 10–90¢ price. A pure top-volume universe skews to long-dated penny
+ * longshots that can never test the scores — the track record needs markets where a
+ * resolution surprise is actually possible on a human timescale.
+ */
+const COHORT_SHARE = Number(process.env.COHORT_SHARE || '0.25')
+const COHORT_MAX_DAYS = 90
+
+function inCohort(priceYes: number | null | undefined, closeDate: string | null | undefined, now: number): boolean {
+  if (priceYes == null || priceYes < 0.1 || priceYes > 0.9) return false
+  if (!closeDate) return false
+  const t = Date.parse(closeDate)
+  if (!Number.isFinite(t)) return false
+  const days = (t - now) / 86_400_000
+  return days > 0 && days <= COHORT_MAX_DAYS
+}
+
+/**
+ * Pick `max` candidates from a volume-sorted list: first fill the reserved cohort
+ * slots with the highest-volume gradeable markets, then the rest by pure volume.
+ */
+function stratifiedSelect<T>(
+  sortedByVol: T[],
+  max: number,
+  isCohort: (c: T) => boolean,
+): T[] {
+  const cohortSlots = Math.ceil(max * COHORT_SHARE)
+  const cohort = sortedByVol.filter(isCohort).slice(0, cohortSlots)
+  const chosen = new Set(cohort)
+  const rest: T[] = []
+  for (const c of sortedByVol) {
+    if (rest.length >= max - cohort.length) break
+    if (!chosen.has(c)) rest.push(c)
+  }
+  return [...rest, ...cohort]
+}
+
 /** Merge catalog entries that share a rulebook (sum volume, keep highest-volume representative). */
 function dedupeByHash(entries: CatalogEntry[]): CatalogEntry[] {
   const byHash = new Map<string, CatalogEntry>()
@@ -38,7 +76,8 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
     pages++
   } while (cursor && pages < 12)
 
-  const qualifying = events
+  const now = Date.now()
+  const pool = events
     .filter((e) => e.series_ticker && !/MVE|MULTIGAME/i.test(e.series_ticker))
     .map((e) => {
       const ms: any[] = e.markets || []
@@ -48,7 +87,10 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
     })
     .filter((x) => x.rep && x.totalVol >= minContracts)
     .sort((a, b) => b.totalVol - a.totalVol)
-    .slice(0, max)
+  const qualifying = stratifiedSelect(pool, max, (q) => {
+    const p = Number(q.rep.last_price_dollars)
+    return inCohort(p > 0 && p < 1 ? p : null, q.rep.close_time ?? null, now)
+  })
 
   const out: CatalogEntry[] = []
   for (const q of qualifying) {
@@ -166,5 +208,6 @@ export async function ingestPolymarket(minVolume: number, max: number): Promise<
       fetchedAt: new Date().toISOString(),
     })
   }
-  return out.sort((a, b) => b.totalVolume - a.totalVolume).slice(0, max)
+  const sorted = out.sort((a, b) => b.totalVolume - a.totalVolume)
+  return stratifiedSelect(sorted, max, (e) => inCohort(e.priceYes, e.closeDate, Date.now()))
 }

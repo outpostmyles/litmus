@@ -19,6 +19,18 @@ interface Resolution {
   via: string
 }
 
+/** A resolution still in flight but visibly CONTESTED — the tool's subject, recorded as evidence. */
+interface InFlight {
+  inflight: true
+  note: string
+}
+
+type Probe = Resolution | InFlight | null
+
+function isInFlight(p: Probe): p is InFlight {
+  return p != null && 'inflight' in p
+}
+
 async function resolveKalshi(ticker: string): Promise<Resolution | null> {
   const j = await tryGetJson(`${KB}/markets/${encodeURIComponent(ticker)}`)
   const m = j?.market
@@ -38,7 +50,7 @@ async function resolveKalshi(ticker: string): Promise<Resolution | null> {
   return { outcome, finalPriceYes, via: `kalshi status=${status} result=${result}` }
 }
 
-async function resolvePolymarket(id: string): Promise<Resolution | null> {
+async function resolvePolymarket(id: string): Promise<Probe> {
   let m: any = null
   if (/^\d+$/.test(id)) m = await tryGetJson(`${GAMMA}/markets/${id}`)
   if (!m) {
@@ -66,7 +78,10 @@ async function resolvePolymarket(id: string): Promise<Resolution | null> {
   const pYes = prices && prices.length >= 2 ? (prices[0] ?? null) : null
   const pNo = prices && prices.length >= 2 ? (prices[1] ?? null) : null
 
-  if (umaPending) return null
+  // A live proposal/challenge/dispute is not final — but it IS evidence that resolution
+  // went sideways, which is precisely what this tool predicts. Surface it for recording
+  // rather than discarding it.
+  if (umaPending) return { inflight: true, note: `uma=${uma}` }
   if (pYes != null && pYes >= 0.99) {
     return { outcome: 'yes', finalPriceYes: pYes, via: `polymarket uma=${uma || 'n/a'} pYes=${pYes}` }
   }
@@ -93,6 +108,7 @@ async function main(): Promise<void> {
 
   let next = 0
   let settled = 0
+  let disputes = 0
   async function worker(): Promise<void> {
     while (next < pending.length) {
       const e = pending[next++]!
@@ -100,6 +116,16 @@ async function main(): Promise<void> {
       if (!res) continue
       const t = track[e.hash]
       if (!t) continue
+      if (isInFlight(res)) {
+        // Not final — record the dispute evidence once and keep the entry pending.
+        if (!t.disputeSeen) {
+          t.disputeSeen = `${res.note} ${new Date().toISOString().slice(0, 10)}`
+          saveTrack(track)
+          disputes++
+          console.log(`  DISPUTED (pending)  ${e.question.slice(0, 48)}  [${res.note}]`)
+        }
+        continue
+      }
       t.settled = true
       t.outcome = res.outcome
       t.finalPriceYes = res.finalPriceYes
@@ -113,7 +139,9 @@ async function main(): Promise<void> {
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length) }, () => worker()))
 
   const totalResolved = Object.values(track).filter((e) => e.settled).length
-  console.log(`\n  Settled ${settled} this run. ${totalResolved} resolved total.`)
+  console.log(
+    `\n  Settled ${settled} this run${disputes ? ` (+${disputes} live dispute${disputes === 1 ? '' : 's'} recorded)` : ''}. ${totalResolved} resolved total.`,
+  )
 
   // Visibility on entries the resolver can't finalize (delisted market, oracle limbo):
   // they stay conservatively pending, but silence would let them pile up unnoticed.

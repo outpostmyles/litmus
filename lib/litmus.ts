@@ -45,6 +45,10 @@ export interface ScoreResult {
   literalFavorsNote?: string | null
   /** Confidence of the lean (0–1), when the enrichment pass recorded one. */
   leanConfidence?: number | null
+  /** Verbatim rules span forcing the divergence (required for high-confidence leans). */
+  leanClauseQuote?: string | null
+  /** True when the current price already reflects a correct literal reading — no edge. */
+  leanCrowdConsistent?: boolean | null
 }
 
 /**
@@ -60,24 +64,69 @@ export interface Edge {
 
 /** An edge needs at least this much lean confidence (when the lean pass reports one). */
 export const MIN_LEAN_CONFIDENCE = 0.55
+/**
+ * At extreme prices the bar rises to the "you can quote the clause" tier. A lean is a
+ * RELATIVE claim (the fine print tilts vs. the casual reading); a 1¢ price is an ABSOLUTE
+ * claim that the event is near-impossible. Calling that a dislocation asserts the crowd
+ * is off by an order of magnitude — which needs a verbatim clause, not a tilt. This gate
+ * is what stops threshold-market boilerplate ("a wick suffices") from minting penny
+ * lotteries as "edges" — the exact artifact behind the first four paper-trade losses.
+ */
+export const EXTREME_COST = 0.05
+export const EXTREME_MIN_CONFIDENCE = 0.85
 
 export function edgeTag(
   literalFavors: LiteralFavors | string | null | undefined,
   priceYes: number | null | undefined,
   leanConfidence?: number | null,
+  crowdConsistent?: boolean | null,
 ): Edge | null {
   if (!literalFavors || literalFavors === 'neither' || priceYes == null) return null
+  // If the current price is already consistent with a CORRECT literal reading plus
+  // ordinary event knowledge, there is no dislocation — the crowd read the fine print.
+  if (crowdConsistent === true) return null
   // A hesitant lean is not a trade signal. Older cached scores have no confidence
   // recorded — those keep the previous behavior until re-enriched.
   if (leanConfidence != null && leanConfidence < MIN_LEAN_CONFIDENCE) return null
+
+  let edge: Edge | null = null
   const pct = Math.round(priceYes * 100)
   if (literalFavors === 'no' && priceYes >= 0.6) {
-    return { side: 'no', label: `rules → No · ${pct}¢ Yes`, strength: priceYes }
+    edge = { side: 'no', label: `rules → No · ${pct}¢ Yes`, strength: priceYes }
+  } else if (literalFavors === 'yes' && priceYes <= 0.4) {
+    edge = { side: 'yes', label: `rules → Yes · ${pct}¢ Yes`, strength: 1 - priceYes }
   }
-  if (literalFavors === 'yes' && priceYes <= 0.4) {
-    return { side: 'yes', label: `rules → Yes · ${pct}¢ Yes`, strength: 1 - priceYes }
+  if (!edge) return null
+
+  // Entry cost of the edge side. At ≤5¢ the claim is extraordinary — demand the
+  // quotable-clause confidence tier (and unknown confidence doesn't qualify).
+  const cost = edge.side === 'yes' ? priceYes : 1 - priceYes
+  if (cost <= EXTREME_COST && !(leanConfidence != null && leanConfidence >= EXTREME_MIN_CONFIDENCE)) {
+    return null
   }
-  return null
+  return edge
+}
+
+/**
+ * How likely the market's gray zone is to matter AT ALL, proxied from the price: a
+ * market at 0.05¢ needs a near-impossible event before any clause can bite; a 50/50
+ * market lives in the gray zone. Saturates at 1 once the underdog side has ≥20%.
+ */
+export function triggerFactor(priceYes: number | null | undefined): number | null {
+  if (priceYes == null) return null
+  const underdog = Math.min(priceYes, 1 - priceYes)
+  return Math.min(1, (2 * underdog) / 0.4)
+}
+
+/**
+ * Two-number view: `combined` is the HAZARD in the text (the tool's identity — how badly
+ * resolution goes IF the gray zone materializes); liveRisk discounts it by how likely the
+ * gray zone is to materialize at the current price. Iran-regime-falls at 0.05¢ keeps its
+ * hazard score but stops dominating the board.
+ */
+export function liveRisk(combined: number, priceYes: number | null | undefined): number | null {
+  const t = triggerFactor(priceYes)
+  return t == null ? null : Math.round(combined * t)
 }
 
 /** Humanize an ISO timestamp's age: "3h ago", "2d ago". Null when unparseable. */
@@ -113,13 +162,22 @@ function timeFactor(days: number | null): number {
 }
 
 /**
- * 0–100 "is this actually tradeable" score for an edge: combines how dislocated
- * the price is (edge strength), how soon it resolves (near-term beats a 2099
- * lottery), and how real the text trap is (resolution risk).
+ * 0–100 "is this actually tradeable" score for an edge: how dislocated the price is
+ * (edge strength), how soon it resolves (near-term beats a 2099 lottery), how real the
+ * text trap is (resolution risk), and — the fix for the penny-lottery pathology — how
+ * plausibly the gray zone can matter at this price (trigger factor). Raw strength alone
+ * is MAXIMIZED at the most extreme prices, which ranked "Royals win the pennant at 0.5¢"
+ * above genuine near-term traps.
  */
-export function actionability(combined: number, edge: Edge | null, closeDate?: string | null): number {
+export function actionability(
+  combined: number,
+  edge: Edge | null,
+  closeDate?: string | null,
+  priceYes?: number | null,
+): number {
   if (!edge) return 0
-  return Math.round(100 * edge.strength * timeFactor(daysUntil(closeDate)) * (combined / 100))
+  const trigger = triggerFactor(priceYes) ?? 1
+  return Math.round(100 * edge.strength * trigger * timeFactor(daysUntil(closeDate)) * (combined / 100))
 }
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n))

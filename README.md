@@ -60,8 +60,8 @@ re-scored. Cost knobs: `KALSHI_MIN_CONTRACTS`, `POLY_MIN_VOLUME`, `INGEST_MAX`,
 ## Validation
 
 On a vetted gold-set of real resolution disputes scored blind, Litmus flagged
-**10 of 12 (83%, 95% CI 55–95%)** markets whose ambiguity was present in the rules
-text, left the control case unflagged, and showed a 28-point mean-risk separation.
+**9 of 12 (75%, 95% CI 47–91%)** markets whose ambiguity was present in the rules
+text, scored the control case 20 (low band), and showed a 35-point mean-risk separation.
 Every percentage carries its n and interval; the limits (small sample, recall-not-
 precision, leakage caveats) are stated plainly in [docs/BACKTEST.md](docs/BACKTEST.md).
 The forward track record accumulates automatically as tracked markets settle.

@@ -60,7 +60,7 @@ function main(): void {
       skippedStale++
       continue
     }
-    const edge = edgeTag(s.literalFavors, e.priceYes, s.leanConfidence)
+    const edge = edgeTag(s.literalFavors, e.priceYes, s.leanConfidence, s.leanCrowdConsistent)
     track[e.rulebookHash] = {
       hash: e.rulebookHash,
       platform: e.platform,
@@ -74,6 +74,10 @@ function main(): void {
       edgeSide: edge ? edge.side : null,
       entryPriceYes: e.priceYes ?? null,
       settled: false,
+      // Generation of the edge rule that made this call (3 = confidence + crowd-consistency
+      // gated). Older locked entries keep their original edgeSide — a locked prediction is
+      // never rewritten — but the record can be segmented by generation.
+      edgeVersion: 3,
     }
     added++
   }

@@ -37,8 +37,8 @@ threshold (45) is the band boundary — set by the scale, not tuned to the backt
 ## Validation, honestly stated
 
 - **Retrospective (blind):** 13 real settled disputes, engine sees only pre-settlement
-  rules text. Recall 10/12 = **83% (95% CI 55–95%)** at the pre-registered threshold; the
-  single clean-text control unflagged; per-case scores + threshold sweep committed in
+  rules text. Recall 9/12 = **75% (95% CI 47–91%)** at the pre-registered threshold; the
+  single clean-text control at 20 (low band); per-case scores + threshold sweep committed in
   [`data/backtest-results.json`](../data/backtest-results.json). Full table, misses, and
   limits (small n, recall-not-precision, world-knowledge leakage): [BACKTEST.md](BACKTEST.md).
 - **Forward (live):** every scored market's prediction is locked *while the market is

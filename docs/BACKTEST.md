@@ -1,15 +1,26 @@
 # Litmus backtest
 
 **Across 12 already-disputed prediction markets whose ambiguity was present in the
-resolution text, Litmus retroactively flagged 10 as elevated-or-higher risk — a recall of
-10/12 = 83% (95% CI 55–95%) — while leaving the one control case unflagged. Mean risk on
-disputed markets was 57 vs 29 on the control: a 28-point separation.**
+resolution text, Litmus retroactively flagged 9 as elevated-or-higher risk — a recall of
+9/12 = 75% (95% CI 47–91%) — while scoring the one control case 20 (low band, well clear
+of the flag line). Mean risk on disputed markets was 55 vs 20 on the control: a 35-point
+separation.**
 
-Run: `npm run backtest` · Model: `claude-opus-4-8` · First run: 2026-06-27
+Run: `npm run backtest` · Model: `claude-opus-4-8` · Current run: 2026-07-03 (prompt v2)
 
 > Read the [Limits](#limits-read-this-before-quoting-the-number) section before quoting
-> the 83%. It is a real result on a small, mostly-positive set — recall is meaningful;
+> the 75%. It is a real result on a small, mostly-positive set — recall is meaningful;
 > precision in the wild is not yet measured.
+
+**Prompt history (full disclosure):** the first run (2026-06-27, prompt v1) scored
+10/12 = 83% (95% CI 55–95%) with the control at 29 (separation 28). Prompt v2 added a
+*boilerplate-activation* rule — platform-standard clauses present in every market are
+scored only when this market's subject makes them likely to bind — motivated by live
+false alarms on the forward board, **not** by these fixtures. Re-run against the
+gold-set, recall dropped one case (the Kalshi Cardi B market fell from 51 to 36) while
+discrimination improved markedly (control 29 → 20; separation 28 → 35). We report the
+current prompt's numbers as the headline because they describe the engine that actually
+runs; both runs are recorded here.
 
 ## Why this is the real validation
 
@@ -47,19 +58,19 @@ per-market rules could not be recovered, and we won't reconstruct rules from hin
 
 | case | market | platform | detect | risk | band | reason-hit |
 |---|---|---|---|---|---|---|
-| 06 | Zelenskyy wears a suit before July | Polymarket | text | **73** | high | 4/4 |
-| 09 | TikTok banned in US before May 2025 | Polymarket | text | **74** | high | 4/4 |
-| 11 | Barron Trump involved with $DJT token | Polymarket | text | **73** | high | 4/4 |
-| 13 | US invades Venezuela | Polymarket | text | **72** | high | 4/4 |
-| 10 | OceanGate Titan found by June 23 | Polymarket | text | **58** | elevated | 3/4 |
-| 07 | Ukraine agrees to Trump mineral deal | Polymarket | text | **54** | elevated | 2/4 |
-| 01 | Khamenei out as Supreme Leader | Kalshi | text | **53** | elevated | 2/5 |
-| 12 | Ethereum ETF approved by May 31 2024 | Polymarket | text | **53** | elevated | 3/4 |
-| 02 | Cardi B performs at Super Bowl LX | Kalshi | text | **51** | elevated | 1/4 |
-| 08 | MicroStrategy sells any BTC by May 31 | Polymarket | text | **47** | elevated | 1/4 |
-| 04 | 2025 Oscars viewership over ~19.5M | Kalshi | text | 42 | moderate | 0/4 |
-| 14 | Cardi B performs at Super Bowl LX | Polymarket | text | 30 | moderate | 0/4 |
-| 03 | 49ers over 10.5 wins *(control)* | Kalshi | ctrl | 29 | moderate | 0/2 |
+| 06 | Zelenskyy wears a suit before July | Polymarket | text | **77** | high | 4/4 |
+| 11 | Barron Trump involved with $DJT token | Polymarket | text | **74** | high | 4/4 |
+| 09 | TikTok banned in US before May 2025 | Polymarket | text | **69** | high | 4/4 |
+| 13 | US invades Venezuela | Polymarket | text | **67** | high | 4/4 |
+| 07 | Ukraine agrees to Trump mineral deal | Polymarket | text | **59** | elevated | 2/4 |
+| 01 | Khamenei out as Supreme Leader | Kalshi | text | **58** | elevated | 2/5 |
+| 10 | OceanGate Titan found by June 23 | Polymarket | text | **55** | elevated | 3/4 |
+| 08 | MicroStrategy sells any BTC by May 31 | Polymarket | text | **50** | elevated | 1/4 |
+| 12 | Ethereum ETF approved by May 31 2024 | Polymarket | text | **50** | elevated | 3/4 |
+| 02 | Cardi B performs at Super Bowl LX | Kalshi | text | 36 | moderate | 0/4 |
+| 04 | 2025 Oscars viewership over ~19.5M | Kalshi | text | 35 | moderate | 0/4 |
+| 14 | Cardi B performs at Super Bowl LX | Polymarket | text | 35 | moderate | 0/4 |
+| 03 | 49ers over 10.5 wins *(control)* | Kalshi | ctrl | 20 | low | 0/2 |
 
 `detect = text` → ambiguity present in the rules (should flag). `ctrl` → surprise came
 from outside the text (should not flag). `reason-hit` = how many of the dimensions this
@@ -72,25 +83,29 @@ A market is "flagged" if combined risk ≥ T. Recall is over the 12 detectable d
 
 | T | detectable disputes | recall (95% CI) | control |
 |---|---|---|---|
-| **≥45** *(pre-registered)* | **10/12** | **83% (55–95%)** | 0/1 |
+| **≥45** *(pre-registered)* | **9/12** | **75% (47–91%)** | 0/1 |
 | ≥50 | 9/12 | 75% (47–91%) | 0/1 |
 | ≥60 | 4/12 | 33% (14–61%) | 0/1 |
 | ≥65 | 4/12 | 33% (14–61%) | 0/1 |
 
-- **Mean risk separation:** detectable disputes 57 vs control 29 (gap 28). With n=1
-  control this is a direction, not a tested effect — see Limits.
-- **Reason precision:** the engine independently flagged 28/51 (55%) of the specific
-  dimensions each dispute is known for — and 28/41 (68%) on the 10 markets it flagged
+- **Mean risk separation:** detectable disputes 55 vs control 20 (gap 35, up from 28
+  under prompt v1). With n=1 control this is a direction, not a tested effect — see Limits.
+- **Reason precision:** the engine independently flagged 27/51 (53%) of the specific
+  dimensions each dispute is known for — and 27/37 (73%) on the 9 markets it flagged
   (≥45). The control case correctly contributes 0/2 (we *want* its dimensions unflagged).
 
-### The two misses (honest)
+### The three misses (honest)
 
-- **Oscars viewership (42)** — the source-revision trap ("revised figures don't count")
+- **Cardi B, Kalshi (36; was 51 under prompt v1)** — the boilerplate-activation rule cost
+  this case: the engine now discounts Kalshi's standard performs/appears definitional
+  language unless the market's subject activates it, and here that language was exactly
+  what bit. The trade-off bought a much cleaner control (29 → 20) and fewer live false
+  alarms; this is the case that paid for it.
+- **Oscars viewership (35)** — the source-revision trap ("revised figures don't count")
   is subtle; the engine saw the named source and under-weighted the revision clause.
-- **Cardi B, Polymarket (30)** — Polymarket's rules ("performs live and in person") were
-  genuinely tighter than Kalshi's looser definition (which scored 51). The dispute there
-  leaned on judging the live event, not on text ambiguity. A defensible low score on a
-  case still labeled a dispute.
+- **Cardi B, Polymarket (35)** — Polymarket's rules ("performs live and in person") were
+  genuinely tighter; the dispute leaned on judging the live event, not text ambiguity.
+  A defensible low score on a case still labeled a dispute.
 
 We do **not** tune the prompt against these, since this is the set the number is reported
 on. Improving recall means expanding the gold-set with *new* held-out cases.
@@ -100,8 +115,8 @@ on. Improving recall means expanding the gold-set with *new* held-out cases.
 This is an honest small-sample result, not a finished evaluation. What it does and does
 not support:
 
-- **Small n, wide interval.** 10/12 has a 95% Wilson interval of 55–95%. The point
-  estimate is 83%; the *evidence* is "probably good, not precisely pinned." Quote the
+- **Small n, wide interval.** 9/12 has a 95% Wilson interval of 47–91%. The point
+  estimate is 75%; the *evidence* is "probably good, not precisely pinned." Quote the
   interval, not just the headline.
 - **Recall, not precision.** The set is 12 positives and **one** negative. We can measure
   how many real disputes we catch (recall); we **cannot** yet measure how often we flag a
@@ -129,7 +144,6 @@ npm run backtest          # scores all fixtures blind, prints this table
 # full per-case output (incl. every dimension score) → data/backtest-results.json
 ```
 
-[`data/backtest-results.json`](../data/backtest-results.json) holds the recorded results
-of the first run (combined score, band, and reason-hits per case) so the numbers above can
-be checked without an API key. A fresh `npm run backtest` overwrites it with the full
-per-dimension detail.
+[`data/backtest-results.json`](../data/backtest-results.json) is the committed artifact
+of the current run — per-case combined score, band, and every dimension score — so the
+numbers above can be checked without an API key. A fresh `npm run backtest` overwrites it.

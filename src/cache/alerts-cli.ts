@@ -34,7 +34,7 @@ function main(): void {
   for (const e of catalog) {
     const s = scores[e.rulebookHash]
     if (!s) continue
-    const edge = edgeTag(s.literalFavors, e.priceYes, s.leanConfidence)
+    const edge = edgeTag(s.literalFavors, e.priceYes, s.leanConfidence, s.leanCrowdConsistent)
     if (!edge) continue
     const priceAge = e.priceAsOf ? (now - Date.parse(e.priceAsOf)) / 3_600_000 : Infinity
     if (priceAge > STALE_HOURS) {
@@ -42,14 +42,14 @@ function main(): void {
       continue
     }
     const d = e.closeDate ? Math.round((new Date(e.closeDate).getTime() - now) / 86_400_000) : null
-    const act = actionability(s.combined, edge, e.closeDate)
+    const act = actionability(s.combined, edge, e.closeDate, e.priceYes)
 
     // Newly formed: yesterday's observation didn't qualify as an edge. The prior point
     // must actually be from ~yesterday (≤48h) — after a history gap we stay silent
     // rather than announce a weeks-old dislocation as new. (The comparison uses today's
     // lean, so a lean flip on an unchanged price also lands here — hence the label.)
     const prior = pointBefore(prices[e.rulebookHash], 20, now, 48)
-    if (prior && !edgeTag(s.literalFavors, prior.p, s.leanConfidence) && (d == null || d >= 0)) {
+    if (prior && !edgeTag(s.literalFavors, prior.p, s.leanConfidence, s.leanCrowdConsistent) && (d == null || d >= 0)) {
       fresh.push({ q: e.question, label: edge.label, d, act })
     }
 

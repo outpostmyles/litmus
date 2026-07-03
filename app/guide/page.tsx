@@ -195,9 +195,12 @@ export default function GuidePage() {
           <p>
             Litmus was backtested against real, already-resolved markets that went to a documented dispute — scored
             blind, seeing only the original rules. It retroactively flagged{' '}
-            <span className="text-fg">10 of 12 (83%)</span> whose ambiguity was present in the text, with zero false
-            positives on the control market whose surprise came from outside the rules. That&rsquo;s the number; the
-            method is in <span className="mono text-faint">docs/BACKTEST.md</span>.
+            <span className="text-fg">9 of 12 (75%, 95% CI 47–91%)</span> whose ambiguity was present in the text,
+            and scored the control market — whose surprise came from outside the rules — deep in the low band. Every
+            case is on the <span className="text-fg">Cases</span> page; method, intervals, and honest limits are in{' '}
+            <span className="mono text-faint">docs/BACKTEST.md</span>. And the <span className="text-fg">Track</span>{' '}
+            tab grades every live call against what actually settles — including a crowd-price baseline, so the tool
+            has to beat the market, not just sound smart.
           </p>
         </Section>
       </div>

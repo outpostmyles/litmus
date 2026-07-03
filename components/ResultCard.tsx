@@ -33,8 +33,8 @@ function Meta({ label, value, warn = false }: { label: string; value: string; wa
 export function ResultCard({ r }: { r: ScoreResult }) {
   const color = riskColor(r.combined)
   const closes = fmtDate(r.market.closeDate)
-  const edge = edgeTag(r.literalFavors, r.market.priceYes, r.leanConfidence)
-  const act = edge ? actionability(r.combined, edge, r.market.closeDate) : 0
+  const edge = edgeTag(r.literalFavors, r.market.priceYes, r.leanConfidence, r.leanCrowdConsistent)
+  const act = edge ? actionability(r.combined, edge, r.market.closeDate, r.market.priceYes) : 0
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -91,6 +91,11 @@ export function ResultCard({ r }: { r: ScoreResult }) {
         )}
         {r.literalFavorsNote && r.literalFavors && r.literalFavors !== 'neither' && (
           <p className="mt-2 max-w-3xl text-[0.86rem] leading-relaxed text-muted">{r.literalFavorsNote}</p>
+        )}
+        {r.leanClauseQuote && r.literalFavors && r.literalFavors !== 'neither' && (
+          <p className="mono mt-1.5 max-w-3xl border-l-2 border-line pl-3 text-[0.78rem] leading-relaxed text-faint">
+            &ldquo;{r.leanClauseQuote}&rdquo;
+          </p>
         )}
 
         <div className="mt-7 grid items-center gap-8 sm:grid-cols-[auto_1fr]">

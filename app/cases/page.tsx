@@ -42,8 +42,22 @@ function loadArtifactScores(): Map<string, CaseScore> {
   const map = new Map<string, CaseScore>()
   try {
     const artifact = JSON.parse(readFileSync('data/backtest-results.json', 'utf8'))
+    const dimFlag = Number(artifact.dimFlag) || 50
     for (const c of artifact.cases ?? []) {
-      map.set(String(c.caseId), { combined: Number(c.combined), band: String(c.band), reasonHit: c.reasonHit })
+      // Reason-hit: how many of the dispute's known failure dimensions the engine
+      // independently flagged (≥ dimFlag). Derived from the per-dimension scores the
+      // backtest runner records.
+      let reasonHit: CaseScore['reasonHit']
+      if (Array.isArray(c.dimensions) && Array.isArray(c.expectedDimensions) && c.expectedDimensions.length) {
+        const flagged = new Set(
+          c.dimensions.filter((d: any) => Number(d.score) >= dimFlag).map((d: any) => String(d.key)),
+        )
+        const hit = c.expectedDimensions.filter((d: string) => flagged.has(d)).length
+        reasonHit = { hit, of: c.expectedDimensions.length }
+      } else if (c.reasonHit) {
+        reasonHit = c.reasonHit
+      }
+      map.set(String(c.caseId), { combined: Number(c.combined), band: String(c.band), reasonHit })
     }
   } catch {
     /* artifact missing — cards render without scores */

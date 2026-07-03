@@ -15,6 +15,8 @@ interface Row {
   outcome: 'yes' | 'no' | 'other' | 'void' | null
   finalPriceYes: number | null
   resolvedAt: string | null
+  disputeSeen: string | null
+  process: 'clean' | 'delayed' | 'contested' | 'split' | 'void' | null
   surprise?: 'surprise' | 'clean' | 'tossup' | null
   edge?: { result: 'win' | 'loss' | 'push'; pnl: number } | null
 }
@@ -49,7 +51,15 @@ interface Payload {
     precisionN: number
     precisionCI: Interval | null
     enoughSample: boolean
+    gradedMid: number
+    gradedExtreme: number
   }
+  process: {
+    flagged: { sideways: number; clean: number }
+    unflagged: { sideways: number; clean: number }
+    liveDisputes: number
+  }
+  baseline: { n: number; crowd: number; litmus: number } | null
   resolvedRows: Row[]
   pendingRows: Row[]
 }
@@ -119,7 +129,8 @@ export function TrackClient() {
   if (error) return <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>
   if (!data) return null
 
-  const { minSample, counts, sim, calibration, resolvedRows, pendingRows } = data
+  const { minSample, counts, sim, calibration, process, baseline, resolvedRows, pendingRows } = data
+  const sidewaysTotal = process.flagged.sideways + process.unflagged.sideways
   const pnlColor = sim.pnl > 0 ? 'text-emerald-300' : sim.pnl < 0 ? 'text-rose-300' : 'text-fg'
 
   return (
@@ -152,7 +163,10 @@ export function TrackClient() {
             ))}
         </Stat>
 
-        <Stat label="risk calibration" foot="does a high score actually predict a surprising resolution?">
+        <Stat
+          label="risk calibration"
+          foot="graded two ways: price surprises (did a confident price flip) and process (did settlement itself go sideways — dispute, void, split, long delay). Extreme-priced entries can't flip, so they're counted apart."
+        >
           {calibration.graded > 0 ? (
             <>
               {calibration.enoughSample ? (
@@ -164,8 +178,15 @@ export function TrackClient() {
                 <span className="mono text-lg font-semibold text-faint">building sample</span>
               )}
               <div className="mono mt-1 text-xs text-muted">
-                caught {calibration.tp} of {calibration.recallN} surprises · {calibration.fp} false alarm
-                {calibration.fp === 1 ? '' : 's'} · {calibration.graded} resolved
+                {calibration.tp}/{calibration.recallN} surprises caught · {calibration.fp} false alarm
+                {calibration.fp === 1 ? '' : 's'} · {calibration.gradedMid} gradeable + {calibration.gradedExtreme}{' '}
+                extreme-priced
+              </div>
+              <div className="mono mt-1 text-xs text-muted">
+                process: {sidewaysTotal} sideways ({process.flagged.sideways} flagged)
+                {process.liveDisputes > 0 && (
+                  <span className="text-amber-300"> · {process.liveDisputes} live dispute{process.liveDisputes === 1 ? '' : 's'}</span>
+                )}
               </div>
             </>
           ) : (
@@ -173,11 +194,19 @@ export function TrackClient() {
           )}
         </Stat>
 
-        <Stat label="coverage" foot="resolutions settle automatically each day, or run npm run settle.">
+        <Stat
+          label="coverage"
+          foot="baseline = Brier score of the locked entry price alone vs the price shifted 10% toward the rules-favored side on locked edges. Lower is better; beating the crowd is the whole game."
+        >
           <div className="mono text-3xl font-semibold text-fg">{counts.resolved}</div>
           <div className="mono mt-1 text-xs text-muted">
             resolved · {counts.pending} open · {counts.tracked} tracked
           </div>
+          {baseline && (
+            <div className="mono mt-1 text-xs text-muted">
+              brier — crowd {baseline.crowd.toFixed(4)} · litmus {baseline.litmus.toFixed(4)} · n={baseline.n}
+            </div>
+          )}
         </Stat>
       </div>
 
@@ -212,6 +241,9 @@ export function TrackClient() {
                       {r.outcome ?? '—'}
                     </span>
                     <div className="mono flex items-center gap-2 text-[0.62rem] uppercase tracking-wider">
+                      {r.process && r.process !== 'clean' && (
+                        <span className="rounded bg-amber-400/10 px-1 py-0.5 text-amber-300">{r.process}</span>
+                      )}
                       {r.surprise === 'surprise' && <span className="text-amber-300">surprise</span>}
                       {r.surprise === 'clean' && <span className="text-faint">clean</span>}
                       {r.edge && (
@@ -266,6 +298,9 @@ export function TrackClient() {
                       <span>{r.platform}</span>
                       <span>entry {cents(r.entryPriceYes)}</span>
                       {r.edgeSide && <EdgeChip side={r.edgeSide} />}
+                      {r.disputeSeen && (
+                        <span className="rounded bg-amber-400/10 px-1 py-0.5 text-amber-300">disputed</span>
+                      )}
                     </div>
                     <div className="truncate text-[0.92rem] font-medium text-fg">{r.question}</div>
                   </div>
