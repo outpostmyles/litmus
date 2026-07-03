@@ -69,6 +69,8 @@ export interface CachedScore {
   /** Directional lean of the literal rules (added by the cheap enrichment pass). */
   literalFavors?: 'yes' | 'no' | 'neither'
   literalFavorsNote?: string
+  /** How confident the lean pass is in that direction (0–1). Edges require ≥0.55. */
+  leanConfidence?: number
 }
 
 export function loadCatalog(): CatalogEntry[] {

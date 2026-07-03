@@ -1,13 +1,8 @@
 import type { MarketInput } from '../engine/types'
+import { getJson } from '../lib/http'
 
 // Kalshi's market-data reads are fully public — no auth, no signing.
 const KALSHI_BASE = process.env.KALSHI_BASE_URL || 'https://api.elections.kalshi.com/trade-api/v2'
-
-async function getJson(url: string): Promise<any> {
-  const res = await fetch(url, { headers: { accept: 'application/json' } })
-  if (!res.ok) throw new Error(`Kalshi API returned ${res.status} for ${url}`)
-  return res.json()
-}
 
 /** Accept a bare ticker or a Kalshi URL (#TICKER fragment or last path segment). */
 function extractTicker(input: string): string {
@@ -32,10 +27,12 @@ export async function fetchKalshiMarket(input: string): Promise<MarketInput> {
   // Long-form rules live on the market; the named settlement source lives on the parent event.
   let eventTitle = ''
   let settlementSources = ''
+  let seriesTicker = ''
   if (market.event_ticker) {
     try {
       const { event } = await getJson(`${KALSHI_BASE}/events/${encodeURIComponent(market.event_ticker)}`)
       eventTitle = event?.title || ''
+      seriesTicker = event?.series_ticker || ''
       settlementSources = (event?.settlement_sources || [])
         .map((x: any) => x?.name)
         .filter(Boolean)
@@ -67,6 +64,7 @@ export async function fetchKalshiMarket(input: string): Promise<MarketInput> {
     outcomes: ['Yes', 'No'],
     volume: market.volume_fp != null ? Number(market.volume_fp) : null,
     liquidity: null, // liquidity_dollars is deprecated on Kalshi and always 0
+    url: seriesTicker ? `https://kalshi.com/markets/${seriesTicker.toLowerCase()}` : null,
   }
 }
 

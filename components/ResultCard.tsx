@@ -33,7 +33,7 @@ function Meta({ label, value, warn = false }: { label: string; value: string; wa
 export function ResultCard({ r }: { r: ScoreResult }) {
   const color = riskColor(r.combined)
   const closes = fmtDate(r.market.closeDate)
-  const edge = edgeTag(r.literalFavors, r.market.priceYes)
+  const edge = edgeTag(r.literalFavors, r.market.priceYes, r.leanConfidence)
   const act = edge ? actionability(r.combined, edge, r.market.closeDate) : 0
   return (
     <motion.section
@@ -56,6 +56,16 @@ export function ResultCard({ r }: { r: ScoreResult }) {
           <Chip>{r.market.platform}</Chip>
           {r.market.marketId && <span className="mono text-xs text-faint">{r.market.marketId}</span>}
           {closes && <span className="mono text-xs text-faint">· closes {closes}</span>}
+          {r.market.url && (
+            <a
+              href={r.market.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mono text-xs text-faint underline decoration-line underline-offset-4 transition-colors hover:text-brand"
+            >
+              open market ↗
+            </a>
+          )}
         </div>
         <h2 className="mt-3 text-2xl font-semibold leading-snug text-fg sm:text-[1.7rem]">{r.market.question}</h2>
 
@@ -69,6 +79,7 @@ export function ResultCard({ r }: { r: ScoreResult }) {
             {r.literalFavors && r.literalFavors !== 'neither' && (
               <span className="mono rounded-md border border-line bg-white/[0.03] px-2.5 py-1 text-xs text-muted">
                 rules lean → {r.literalFavors === 'yes' ? 'Yes' : 'No'}
+                {r.leanConfidence != null && ` · ${Math.round(r.leanConfidence * 100)}%`}
               </span>
             )}
             {edge && (

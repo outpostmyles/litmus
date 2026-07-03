@@ -7,6 +7,8 @@ import {
   BAND_LABEL,
   edgeTag,
   actionability,
+  ageOf,
+  STALE_HOURS,
   type RiskBand,
   type ScoreResult,
   type DimensionResult,
@@ -31,6 +33,11 @@ function StarIcon({ filled, size = 16 }: { filled: boolean; size?: number }) {
   )
 }
 
+interface PricePoint {
+  t: string
+  p: number
+}
+
 interface Item {
   rulebookHash: string
   platform: string
@@ -45,6 +52,9 @@ interface Item {
   marketCount: number
   priceYes: number | null
   priceAsOf: string | null
+  delta1d: number | null
+  delta7d: number | null
+  history: PricePoint[]
   url: string | null
   score: {
     combined: number
@@ -58,6 +68,7 @@ interface Item {
     scoredAt: string
     literalFavors?: LiteralFavors
     literalFavorsNote?: string
+    leanConfidence?: number
   }
 }
 
@@ -66,6 +77,7 @@ interface Payload {
   totalRulebooks: number
   scoredCount: number
   unscoredCount: number
+  dataAsOf: string | null
 }
 
 interface Alert {
@@ -115,6 +127,7 @@ function toResult(it: Item): ScoreResult {
     model: it.score.model,
     literalFavors: it.score.literalFavors ?? null,
     literalFavorsNote: it.score.literalFavorsNote ?? null,
+    leanConfidence: it.score.leanConfidence ?? null,
     market: {
       platform: it.platform,
       question: it.question,
@@ -124,8 +137,35 @@ function toResult(it: Item): ScoreResult {
       closeDate: it.closeDate,
       outcomes: it.outcomes,
       priceYes: it.priceYes,
+      url: it.url,
     },
   }
+}
+
+/** Signed price move in cents: "+7¢" / "−4¢". Hidden under 1¢. */
+function fmtDelta(d: number | null): string | null {
+  if (d == null) return null
+  const cents = Math.round(d * 100)
+  if (cents === 0) return null
+  return `${cents > 0 ? '+' : '−'}${Math.abs(cents)}¢`
+}
+
+/** Tiny inline price sparkline. Pure render — no axes, just the shape of the move. */
+function Spark({ points, color }: { points: PricePoint[]; color: string }) {
+  if (points.length < 3) return null
+  const w = 56
+  const h = 16
+  const ps = points.map((pt) => pt.p)
+  const min = Math.min(...ps)
+  const max = Math.max(...ps)
+  const span = Math.max(max - min, 0.02) // flat lines stay visually flat, not noisy
+  const step = w / (ps.length - 1)
+  const d = ps.map((p, i) => `${(i * step).toFixed(1)},${(h - ((p - min) / span) * h).toFixed(1)}`).join(' ')
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0 opacity-70" aria-hidden>
+      <polyline points={d} fill="none" stroke={color} strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
 }
 
 export function Dashboard() {
@@ -153,8 +193,8 @@ export function Dashboard() {
         fetch('/api/catalog', { cache: 'no-store' }),
         fetch('/api/watchlist', { cache: 'no-store' }),
       ])
-      const cj = (await cRes.json()) as Payload
       if (!cRes.ok) throw new Error('Failed to load catalog.')
+      const cj = (await cRes.json()) as Payload
       setData(cj)
       if (wRes.ok) {
         const wj = await wRes.json()
@@ -197,7 +237,11 @@ export function Dashboard() {
 
   const items = data?.items ?? []
   const categories = useMemo(() => ['all', ...Array.from(new Set(items.map((i) => i.category))).sort()], [items])
-  const edgeCount = useMemo(() => items.filter((i) => edgeTag(i.score.literalFavors, i.priceYes)).length, [items])
+  const itemEdge = (i: Item) => edgeTag(i.score.literalFavors, i.priceYes, i.score.leanConfidence)
+  const edgeCount = useMemo(() => items.filter((i) => itemEdge(i)).length, [items])
+
+  const dataAge = ageOf(data?.dataAsOf)
+  const isStale = data?.dataAsOf ? Date.now() - Date.parse(data.dataAsOf) > STALE_HOURS * 3_600_000 : false
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -205,7 +249,7 @@ export function Dashboard() {
       if (platform !== 'all' && i.platform !== platform) return false
       if (category !== 'all' && i.category !== category) return false
       if (band !== 'all' && i.score.band !== band) return false
-      if (edgesOnly && !edgeTag(i.score.literalFavors, i.priceYes)) return false
+      if (edgesOnly && !itemEdge(i)) return false
       if (watchOnly && !watched.has(i.rulebookHash)) return false
       if (q && !i.question.toLowerCase().includes(q) && !i.score.headlineRisk.toLowerCase().includes(q)) return false
       return true
@@ -218,8 +262,8 @@ export function Dashboard() {
         return ta - tb
       }
       if (sort === 'edge') {
-        const aa = actionability(a.score.combined, edgeTag(a.score.literalFavors, a.priceYes), a.closeDate)
-        const ab = actionability(b.score.combined, edgeTag(b.score.literalFavors, b.priceYes), b.closeDate)
+        const aa = actionability(a.score.combined, itemEdge(a), a.closeDate)
+        const ab = actionability(b.score.combined, itemEdge(b), b.closeDate)
         if (aa !== ab) return ab - aa
         return b.score.combined - a.score.combined
       }
@@ -322,6 +366,12 @@ export function Dashboard() {
             <span>
               {filtered.length} shown · {data.scoredCount} scored · <span className="text-brand">{edgeCount} edges</span>
             </span>
+            {dataAge && (
+              <span className={isStale ? 'text-rose-300' : ''}>
+                prices as of {dataAge}
+                {isStale && ' — stale, run npm run ingest'}
+              </span>
+            )}
             {data.unscoredCount > 0 && (
               <span className="text-amber-300/80">
                 {data.unscoredCount} not yet scored — run <span className="text-amber-200">npm run backfill</span>
@@ -370,7 +420,8 @@ export function Dashboard() {
           const isWatched = watched.has(it.rulebookHash)
           const closes = closesIn(it.closeDate)
           const price = fmtPrice(it.priceYes)
-          const edge = edgeTag(it.score.literalFavors, it.priceYes)
+          const delta = fmtDelta(it.delta1d)
+          const edge = itemEdge(it)
           const act = edge ? actionability(it.score.combined, edge, it.closeDate) : 0
           return (
             <div key={it.rulebookHash}>
@@ -379,6 +430,9 @@ export function Dashboard() {
                 tabIndex={0}
                 onClick={() => setExpanded(isOpen ? null : it.rulebookHash)}
                 onKeyDown={(e) => {
+                  // Only when the row itself is focused — Enter on a nested link/button
+                  // must activate that child, not toggle the row.
+                  if (e.target !== e.currentTarget) return
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
                     setExpanded(isOpen ? null : it.rulebookHash)
@@ -393,7 +447,7 @@ export function Dashboard() {
                     {it.score.combined}
                   </span>
                   <span className="mono mt-1 text-[0.56rem] tracking-[0.12em]" style={{ color }}>
-                    {BAND_LABEL[it.score.band]}
+                    {BAND_LABEL[it.score.band] ?? it.score.band}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
@@ -402,6 +456,7 @@ export function Dashboard() {
                     <span className="text-faint/70">{it.category}</span>
                     <span className="text-muted">{fmtVol(it.platform, it.volume)}</span>
                     {price && <span className="text-fg/80">Yes {price}</span>}
+                    {delta && <span className="text-fg/60">Δ24h {delta}</span>}
                     {it.marketCount > 1 && <span className="text-faint/70">×{it.marketCount}</span>}
                     {closes && <span className="text-faint/70">{closes}</span>}
                     {!it.score.namedSource && <span className="text-rose-300">no source</span>}
@@ -414,6 +469,27 @@ export function Dashboard() {
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
                   <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">{it.score.headlineRisk}</div>
                 </div>
+                {it.history.length >= 3 && (
+                  <div className="hidden md:block">
+                    <Spark points={it.history} color={color} />
+                  </div>
+                )}
+                {it.url && (
+                  <a
+                    href={it.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`open on ${it.platform}`}
+                    className="shrink-0 px-1 text-faint transition-colors hover:text-brand"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation()

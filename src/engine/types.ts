@@ -19,6 +19,8 @@ export interface MarketInput {
   outcomes?: string[]
   volume?: number | null
   liquidity?: number | null
+  /** Public web page for the market, when known. Context only — never scored. */
+  url?: string | null
 }
 
 /** Loose parser for CLI / fixture input. Tolerant of missing optional fields. */
@@ -33,6 +35,7 @@ export const MarketInputSchema = z.object({
   outcomes: z.array(z.string()).optional(),
   volume: z.number().nullish(),
   liquidity: z.number().nullish(),
+  url: z.string().nullish(),
 })
 
 /**

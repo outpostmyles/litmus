@@ -1,5 +1,6 @@
 import { ingestKalshi, ingestPolymarket } from './ingest'
 import { saveCatalog, loadScores, type CatalogEntry } from './store'
+import { appendPrices } from './prices'
 
 const kalshiMin = Number(process.env.KALSHI_MIN_CONTRACTS || '10000')
 const polyMin = Number(process.env.POLY_MIN_VOLUME || '100000')
@@ -22,6 +23,7 @@ async function main(): Promise<void> {
 
   const all = [...k, ...p]
   saveCatalog(all)
+  const hist = appendPrices(all)
 
   const scores = loadScores()
   const hashes = new Set(all.map((e) => e.rulebookHash))
@@ -29,6 +31,7 @@ async function main(): Promise<void> {
 
   console.log(`  Kalshi: ${k.length} rulebooks  ·  Polymarket: ${p.length} rulebooks`)
   console.log(`  catalog saved: ${all.length} entries, ${hashes.size} distinct rulebooks`)
+  console.log(`  price history: +${hist.appended} points (${hist.series} series)`)
   console.log(`  unscored: ${unscored}  →  run \`npm run backfill\``)
   console.log(
     `  est. cost to score the unscored: ~$${(unscored * 0.05).toFixed(2)} (Opus) / ~$${(unscored * 0.02).toFixed(2)} (Sonnet)\n`,

@@ -1,14 +1,9 @@
 import { rulebookHash, type CatalogEntry } from './store'
 import { fetchKalshiMarket } from '../platforms/kalshi'
+import { getJson } from '../lib/http'
 
 const KB = process.env.KALSHI_BASE_URL || 'https://api.elections.kalshi.com/trade-api/v2'
 const GAMMA = process.env.POLYMARKET_GAMMA_URL || 'https://gamma-api.polymarket.com'
-
-async function getJson(url: string): Promise<any> {
-  const r = await fetch(url, { headers: { accept: 'application/json' } })
-  if (!r.ok) throw new Error(`${url} -> ${r.status}`)
-  return r.json()
-}
 
 /** Merge catalog entries that share a rulebook (sum volume, keep highest-volume representative). */
 function dedupeByHash(entries: CatalogEntry[]): CatalogEntry[] {
@@ -78,7 +73,8 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
             ? Number(q.rep.last_price_dollars)
             : null,
         priceAsOf: new Date().toISOString(),
-        url: null,
+        // Series landing page — the canonical public URL for an event's markets.
+        url: q.event.series_ticker ? `https://kalshi.com/markets/${String(q.event.series_ticker).toLowerCase()}` : null,
         fetchedAt: new Date().toISOString(),
       })
     } catch {
@@ -90,8 +86,31 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
 
 /** Pull high-volume Polymarket markets, grouped by rulebook (fan-outs collapse to one entry). */
 export async function ingestPolymarket(minVolume: number, max: number): Promise<CatalogEntry[]> {
-  const arr = await getJson(`${GAMMA}/markets?closed=false&active=true&order=volumeNum&ascending=false&limit=400`)
-  const list: any[] = Array.isArray(arr) ? arr : arr?.data || []
+  // Page through Gamma in volume order until results fall below the volume floor —
+  // a single un-paginated call silently capped the universe at its first page.
+  // Gamma caps page size at 100 regardless of the requested limit, so advance the
+  // offset by what actually arrived and only treat an EMPTY page as the end.
+  const PAGE = 100
+  const MAX_ROWS = 1500
+  const list: any[] = []
+  const seenIds = new Set<string>()
+  let offset = 0
+  while (offset < MAX_ROWS) {
+    const arr = await getJson(
+      `${GAMMA}/markets?closed=false&active=true&order=volumeNum&ascending=false&limit=${PAGE}&offset=${offset}`,
+    )
+    const rows: any[] = Array.isArray(arr) ? arr : arr?.data || []
+    if (!rows.length) break // true last page
+    offset += rows.length
+    for (const m of rows) {
+      const id = String(m?.id ?? '')
+      if (id && seenIds.has(id)) continue // guard against re-ordering drift between requests
+      if (id) seenIds.add(id)
+      list.push(m)
+    }
+    const tailVol = Number(rows[rows.length - 1]?.volumeNum || 0)
+    if (tailVol < minVolume) break // volume-ordered: everything deeper is below the floor
+  }
   const qualifying = list.filter(
     (m) => m && m.description && String(m.description).trim().length > 40 && Number(m.volumeNum || 0) >= minVolume,
   )

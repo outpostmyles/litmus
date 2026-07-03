@@ -22,6 +22,8 @@ export interface MarketEcho {
   outcomes?: string[]
   /** Current implied probability of "Yes" (0–1), as last fetched. */
   priceYes?: number | null
+  /** Public web page for the market, when known. */
+  url?: string | null
 }
 
 /** Which outcome the LITERAL rules favor when they diverge from the intuitive reading. */
@@ -41,6 +43,8 @@ export interface ScoreResult {
   /** Direction the literal rules lean vs. the intuitive reading (enrichment layer). */
   literalFavors?: LiteralFavors | null
   literalFavorsNote?: string | null
+  /** Confidence of the lean (0–1), when the enrichment pass recorded one. */
+  leanConfidence?: number | null
 }
 
 /**
@@ -54,11 +58,18 @@ export interface Edge {
   strength: number
 }
 
+/** An edge needs at least this much lean confidence (when the lean pass reports one). */
+export const MIN_LEAN_CONFIDENCE = 0.55
+
 export function edgeTag(
   literalFavors: LiteralFavors | string | null | undefined,
   priceYes: number | null | undefined,
+  leanConfidence?: number | null,
 ): Edge | null {
   if (!literalFavors || literalFavors === 'neither' || priceYes == null) return null
+  // A hesitant lean is not a trade signal. Older cached scores have no confidence
+  // recorded — those keep the previous behavior until re-enriched.
+  if (leanConfidence != null && leanConfidence < MIN_LEAN_CONFIDENCE) return null
   const pct = Math.round(priceYes * 100)
   if (literalFavors === 'no' && priceYes >= 0.6) {
     return { side: 'no', label: `rules → No · ${pct}¢ Yes`, strength: priceYes }
@@ -68,6 +79,20 @@ export function edgeTag(
   }
   return null
 }
+
+/** Humanize an ISO timestamp's age: "3h ago", "2d ago". Null when unparseable. */
+export function ageOf(iso: string | null | undefined, now = Date.now()): string | null {
+  if (!iso) return null
+  const t = Date.parse(iso)
+  if (!Number.isFinite(t)) return null
+  const h = Math.max(0, (now - t) / 3_600_000)
+  if (h < 1) return 'under 1h ago'
+  if (h < 48) return `${Math.round(h)}h ago`
+  return `${Math.round(h / 24)}d ago`
+}
+
+/** Data older than this is stale — don't trade (or alert) on it. */
+export const STALE_HOURS = 36
 
 /** Days until close (negative = already past), or null. */
 export function daysUntil(closeDate?: string | null): number | null {

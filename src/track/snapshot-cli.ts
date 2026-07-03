@@ -1,5 +1,5 @@
 import { loadCatalog, loadScores } from '../cache/store'
-import { edgeTag } from '../../lib/litmus'
+import { edgeTag, STALE_HOURS } from '../../lib/litmus'
 import { loadTrack, saveTrack, type Track } from './store'
 
 // Lock a prediction for every scored market we aren't already tracking. Entry price
@@ -42,6 +42,7 @@ function main(): void {
 
   let added = 0
   let skippedClosed = 0
+  let skippedStale = 0
   for (const e of catalog) {
     const s = scores[e.rulebookHash]
     if (!s || track[e.rulebookHash]) continue
@@ -51,7 +52,15 @@ function main(): void {
       skippedClosed++
       continue
     }
-    const edge = edgeTag(s.literalFavors, e.priceYes)
+    // Don't lock an entry at a stale cached price either — if ingest failed, the live
+    // market may have already converged, and a phantom dislocation would flatter the
+    // paper P&L. The market locks on the next fresh ingest instead.
+    const priceAge = e.priceAsOf ? (now - Date.parse(e.priceAsOf)) / 3_600_000 : null
+    if (e.priceYes != null && priceAge != null && priceAge > STALE_HOURS) {
+      skippedStale++
+      continue
+    }
+    const edge = edgeTag(s.literalFavors, e.priceYes, s.leanConfidence)
     track[e.rulebookHash] = {
       hash: e.rulebookHash,
       platform: e.platform,
@@ -73,6 +82,7 @@ function main(): void {
   const notes = [
     removed ? `pruned ${removed} look-ahead-tainted` : '',
     skippedClosed ? `skipped ${skippedClosed} already-closed` : '',
+    skippedStale ? `deferred ${skippedStale} stale-priced` : '',
   ]
     .filter(Boolean)
     .join(', ')

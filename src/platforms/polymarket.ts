@@ -1,13 +1,8 @@
 import type { MarketInput } from '../engine/types'
+import { getJson } from '../lib/http'
 
 // Polymarket's Gamma API is public (no auth) and carries the full resolution text in `description`.
 const GAMMA = process.env.POLYMARKET_GAMMA_URL || 'https://gamma-api.polymarket.com'
-
-async function getJson(url: string): Promise<any> {
-  const res = await fetch(url, { headers: { accept: 'application/json' } })
-  if (!res.ok) throw new Error(`Polymarket Gamma returned ${res.status} for ${url}`)
-  return res.json()
-}
 
 /** Accept a slug, numeric id, or a polymarket.com URL (last path segment is the slug). */
 function extractSlug(input: string): string {
@@ -42,6 +37,7 @@ function toMarketInput(m: any): MarketInput {
     outcomes,
     volume: m.volumeNum != null ? Number(m.volumeNum) : m.volume != null ? Number(m.volume) : null,
     liquidity: m.liquidityNum != null ? Number(m.liquidityNum) : null,
+    url: m.slug ? `https://polymarket.com/event/${m.slug}` : null,
   }
   if (!mi.resolutionText) throw new Error('Polymarket market has no description / resolution text.')
   return mi
@@ -95,8 +91,17 @@ export async function listPolymarketMarkets(
     const events: any[] = Array.isArray(byEvent) ? byEvent : byEvent?.data || []
     raw = events[0]?.markets || []
   } else {
-    const pool = await getJson(`${GAMMA}/markets?closed=false&active=true&limit=400`)
-    raw = Array.isArray(pool) ? pool : pool?.data || []
+    // Gamma caps page size at 100 regardless of the requested limit — page for a real pool.
+    raw = []
+    for (let offset = 0; offset < 400; offset += 100) {
+      const pool = await getJson(
+        `${GAMMA}/markets?closed=false&active=true&order=volumeNum&ascending=false&limit=100&offset=${offset}`,
+      )
+      const rows: any[] = Array.isArray(pool) ? pool : pool?.data || []
+      if (!rows.length) break
+      raw.push(...rows)
+      if (rows.length < 100) break
+    }
   }
 
   let list = raw.filter(

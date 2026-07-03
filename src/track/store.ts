@@ -27,6 +27,8 @@ export interface TrackEntry {
   resolvedAt?: string
   outcome?: Outcome
   finalPriceYes?: number | null
+  /** How the outcome was derived from the platform API — audit trail for every grade. */
+  resolvedVia?: string
 }
 
 export type Track = Record<string, TrackEntry>

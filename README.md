@@ -8,10 +8,15 @@ outcome and the assumed outcome can diverge.
 > Resolution is the part of prediction markets that actually blows up, and almost
 > nobody prices it systematically.
 
+Start here: **[docs/METHODOLOGY.md](docs/METHODOLOGY.md)** (the one-page why/how) ·
+**[docs/BACKTEST.md](docs/BACKTEST.md)** (validation, with confidence intervals) ·
+the in-app **/cases** gallery (real disputes, scored blind).
+
 ## The scoring engine
 
-Each market's resolution text is scored on five dimensions (0–100), then weighted into
-a combined risk score, with a plain-English explanation and the exact offending clause:
+Each market's resolution text is scored on five dimensions (0–100), then combined in
+code into a single risk score, with a plain-English explanation and the exact offending
+clause quoted back:
 
 | Dimension | What it catches |
 |---|---|
@@ -21,41 +26,61 @@ a combined risk score, with a plain-English explanation and the exact offending 
 | **Timing risk** | Can the resolving event be delayed, extended, or contested? |
 | **Dispute surface** | Does resolution require subjective judgment / multiple plausible readings? |
 
-## Usage
+## The app
+
+`npm run dev` → four surfaces:
+
+- **Lookup** (`/`) — paste a Kalshi ticker / Polymarket slug / raw rules text, get the
+  gauge, five dimensions, the offending clauses, and the trade-signal chips.
+- **Board** (`/board`) — the cached universe ranked by risk: filters, edges (rules-lean
+  vs crowd price), price momentum sparklines, watchlist stars, freshness banner.
+- **Track** (`/track`) — the live forward record: every prediction locked at first sight
+  on open markets, graded automatically on settlement. Paper-trade P&L for edges,
+  calibration for risk scores, rates gated until n ≥ 20.
+- **Cases** (`/cases`) — the gold-set gallery: 13 real disputes, what traders assumed,
+  what actually happened, and Litmus's blind score of the original rules.
+
+## The pipeline (zero-cost daily loop)
 
 ```bash
-# Score a live market — fetches resolution text from the public API and scores it
-npm run score -- --kalshi KXELONMARS-99
-npm run score -- --polymarket will-egypt-win-the-2026-fifa-world-cup   # slug or full URL
-npm run score -- data/fixtures/sample-market.json                      # ...or a market JSON file
-
-# Rank a live category by resolution risk — the "riskiest markets" board
-npm run scan -- --kalshi --category Politics --limit 12
-npm run scan -- --polymarket --query "election" --limit 12
-npm run scan -- --polymarket --event <event-slug>                      # all markets in one event
-#   add --dry to list candidates without scoring (free)
-
-npm run backtest        # score the gold-set blind, print the hit-rate
+npm run ingest     # pull high-volume markets + live prices; append price history (free)
+npm run backfill   # score any new rulebooks once (paid — the only step that costs)
+npm run enrich     # cheap Haiku pass: directional lean + confidence  (--force to redo)
+npm run snapshot   # lock predictions for newly scored OPEN markets (free)
+npm run settle     # record outcomes for closed markets, with provenance (free)
+npm run alerts     # closing-soon + fresh-edge alerts, macOS notification (free)
 ```
 
-Both platforms' market-data reads are public — the live lookup needs no platform keys.
-The engine needs `ANTHROPIC_API_KEY` in `.env` (copy `.env.example`).
+A launchd job (`scripts/com.litmus.daily.plist`) runs ingest → snapshot → settle →
+alerts daily. Scores are cached by a hash of the rulebook text, so fan-out markets
+(every "Will X win?" leg) collapse to a single model call, and nothing is ever
+re-scored. Cost knobs: `KALSHI_MIN_CONTRACTS`, `POLY_MIN_VOLUME`, `INGEST_MAX`,
+`BACKFILL_MAX`, `LEAN_MODEL`.
 
-## Status
+## Validation
 
-**Backtest-first, and the engine is validated.** On a vetted gold-set of real
-resolution disputes scored blind, Litmus flagged **10 of 12 (83%)** markets whose
-ambiguity was present in the rules text, left the control case unflagged, and showed a
-28-point mean-risk separation between disputed and clean markets. See
-[docs/BACKTEST.md](docs/BACKTEST.md).
+On a vetted gold-set of real resolution disputes scored blind, Litmus flagged
+**10 of 12 (83%, 95% CI 55–95%)** markets whose ambiguity was present in the rules
+text, left the control case unflagged, and showed a 28-point mean-risk separation.
+Every percentage carries its n and interval; the limits (small sample, recall-not-
+precision, leakage caveats) are stated plainly in [docs/BACKTEST.md](docs/BACKTEST.md).
+The forward track record accumulates automatically as tracked markets settle.
 
-- [x] **Phase 0 — Engine** · 5-dimension rubric, Opus 4.8 structured output, weighted combine
-- [x] **Phase 0 — Backtest** · 13-case gold-set scored blind → 83% recall, 0 false positives on control
-- [ ] **Phase B — Data layer** · pull live Kalshi markets (public API), store in Supabase
-- [ ] **Phase C — UI** · ranked risk board + pre-trade single-market lookup
-- [ ] **Phase D — Personal layer** · watchlist + alerts near resolution dates
+## CLI
+
+```bash
+npm run score -- --kalshi KXELONMARS-99
+npm run score -- --polymarket will-egypt-win-the-2026-fifa-world-cup
+npm run score -- data/fixtures/sample-market.json
+npm run scan  -- --kalshi --category Politics --limit 12   # --dry to list for free
+npm run backtest                                           # re-run the gold-set blind
+```
+
+Both platforms' market-data reads are public — no platform keys. The engine needs
+`ANTHROPIC_API_KEY` in `.env` (copy `.env.example`).
 
 ## Stack
 
-Next.js + TypeScript + Supabase. Engine modules are plain TS (run via `tsx`) so the
-backtest and the eventual web app share one scoring core.
+Next.js (App Router) + TypeScript + Tailwind. Engine modules are plain TS (run via
+`tsx`) so the backtest, the CLIs, and the web app share one scoring core. All state is
+local JSON under `data/cache/` (gitignored) — no accounts, no database.

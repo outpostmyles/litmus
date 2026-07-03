@@ -41,6 +41,7 @@ export async function POST(req: Request) {
         resolutionSource: market.resolutionSource ?? null,
         closeDate: market.closeDate ?? null,
         outcomes: market.outcomes ?? ['Yes', 'No'],
+        url: market.url ?? null,
       },
     })
   } catch (err) {
