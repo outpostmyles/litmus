@@ -16,8 +16,11 @@
     "alerts": "tsx src/cache/alerts-cli.ts",
     "snapshot": "tsx src/track/snapshot-cli.ts",
     "settle": "tsx src/track/settle-cli.ts",
+    "crossvenue": "tsx src/cache/crossvenue-cli.ts",
+    "pairs-settle": "tsx src/cache/pairs-settle-cli.ts",
     "backtest": "tsx src/backtest/run.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -37,6 +40,7 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }

@@ -1,0 +1,5 @@
+{
+  "same_event": "no",
+  "confidence": 0.99,
+  "reasoning": "These markets reference entirely different underlying events with only superficial word overlap. The Kalshi market is about whether Kash Patel leaves his position as FBI Director in the Trump administration before 2027. The Polymarket is about whether the wallet(s) attributed to Satoshi Nakamoto execute any Bitcoin transactions in 2026. There is no connection between these two events\u2014one concerns personnel changes in a U.S. government agency, the other concerns cryptocurrency transaction activity. The only shared element is the 2026 time reference and the word 'leave'/'move,' but these refer to completely unrelated phenomena in different domains (government employment vs. blockchain activity). No single real-world occurrence would settle both markets."
+}

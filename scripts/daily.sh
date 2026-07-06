@@ -10,4 +10,5 @@ echo "=== litmus daily $(date '+%Y-%m-%d %H:%M:%S') ==="
 npm run ingest || echo "  (ingest failed — alerting on cached prices)"
 npm run snapshot
 npm run settle
+npm run pairs-settle
 npm run alerts

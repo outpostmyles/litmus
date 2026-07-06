@@ -34,21 +34,28 @@ clause quoted back:
   gauge, five dimensions, the offending clauses, and the trade-signal chips.
 - **Board** (`/board`) — the cached universe ranked by risk: filters, edges (rules-lean
   vs crowd price), price momentum sparklines, watchlist stars, freshness banner.
+- **Pairs** (`/pairs`) — cross-venue divergence: when Kalshi and Polymarket list the
+  same real-world event, Litmus diffs their rulebooks clause by clause and names the
+  concrete scenario under which one venue pays Yes and the other No — the check that
+  decides whether a cross-venue price gap is an arb or a trap.
 - **Track** (`/track`) — the live forward record: every prediction locked at first sight
   on open markets, graded automatically on settlement. Paper-trade P&L for edges,
-  calibration for risk scores, rates gated until n ≥ 20.
+  calibration for risk scores, rates gated until n ≥ 20. Locked cross-venue pairs
+  grade on whether both venues settled identically.
 - **Cases** (`/cases`) — the gold-set gallery: 13 real disputes, what traders assumed,
   what actually happened, and Litmus's blind score of the original rules.
 
 ## The pipeline (zero-cost daily loop)
 
 ```bash
-npm run ingest     # pull high-volume markets + live prices; append price history (free)
-npm run backfill   # score any new rulebooks once (paid — the only step that costs)
-npm run enrich     # cheap Haiku pass: directional lean + confidence  (--force to redo)
-npm run snapshot   # lock predictions for newly scored OPEN markets (free)
-npm run settle     # record outcomes for closed markets, with provenance (free)
-npm run alerts     # closing-soon + fresh-edge alerts, macOS notification (free)
+npm run ingest       # pull high-volume markets + live prices; append price history (free)
+npm run backfill     # score any new rulebooks once (paid — the main step that costs)
+npm run enrich       # cheap Haiku pass: directional lean + confidence  (--force to redo)
+npm run crossvenue   # match cross-venue pairs + diff their rules (paid, cached by pair)
+npm run snapshot     # lock predictions for newly scored OPEN markets (free)
+npm run settle       # record outcomes for closed markets, with provenance (free)
+npm run pairs-settle # grade locked pairs when both legs settle (free)
+npm run alerts       # closing-soon + fresh-edge alerts, macOS notification (free)
 ```
 
 A launchd job (`scripts/com.litmus.daily.plist`) runs ingest → snapshot → settle →

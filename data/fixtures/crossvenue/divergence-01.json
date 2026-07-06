@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "topic": "deadline",
+      "severity": 95,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+      "polymarket_clause": "This market will resolve to \"Yes\" if the United States officially announces that Greenland will come under US sovereignty by December 31, 2026, 11:59 PM ET.",
+      "explanation": "Kalshi's window runs until Jan 20, 2029 while Polymarket closes Dec 31, 2026. Any qualifying event in the ~2-year gap between 2027 and 2029 counts on Kalshi only, splitting the settlement."
+    },
+    {
+      "topic": "trigger",
+      "severity": 85,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark",
+      "polymarket_clause": "Sovereignty is defined as the transfer of the majority of the territory of Greenland from its current status as an autonomous territory within the Kingdom of Denmark to being under the formal governance or jurisdiction of the United States",
+      "explanation": "Kalshi only requires a purchase of 'at least part' of Greenland, while Polymarket requires the 'majority of the territory' coming under US sovereignty. A partial acquisition (e.g. a small district or a base region) satisfies Kalshi but not Polymarket."
+    },
+    {
+      "topic": "trigger",
+      "severity": 70,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark",
+      "polymarket_clause": "An official announcement made by the United States and Denmark that Greenland will come under US sovereignty will qualify, even if the actual transfer of sovereignty is yet to occur.",
+      "explanation": "Kalshi requires an actual 'purchase' (completed transaction) while Polymarket resolves on a mere official announcement even before any transfer. An announcement without completed purchase settles Polymarket Yes but leaves Kalshi No; conversely a purchase not framed as a sovereignty announcement could differ."
+    },
+    {
+      "topic": "trigger",
+      "severity": 55,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark",
+      "polymarket_clause": "being under the formal governance or jurisdiction of the United States, either as a state, territory, or other classification within the US system",
+      "explanation": "Kalshi requires a 'purchase' (monetary/property transaction) whereas Polymarket accepts any transfer of sovereignty by any means, including non-purchase mechanisms (annexation, treaty, cession). A non-purchase sovereignty transfer settles Polymarket Yes but Kalshi No."
+    },
+    {
+      "topic": "source",
+      "severity": 40,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+      "polymarket_clause": "The resolution source for this market will be official information from the governments of the US, Greenland, and Denmark, however a consensus of credible reporting confirming that Greenland has come under U.S. sovereignty will also qualify.",
+      "explanation": "Polymarket names specific government sources plus a 'consensus of credible reporting' fallback; Kalshi specifies no source. In a contested/ambiguous factual situation the two could reach opposite conclusions about whether the event occurred."
+    },
+    {
+      "topic": "carveout",
+      "severity": 30,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+      "polymarket_clause": "Only announcements of official agreements or actions (e.g. executive order, signed legislation, etc.) will count - mere posts on Social Media will not.",
+      "explanation": "Polymarket explicitly excludes social-media posts and requires official agreements/actions; Kalshi has no such exclusion. A Trump social-media declaration of purchase could arguably be read differently, though Kalshi still requires an actual purchase."
+    }
+  ],
+  "scenario_that_splits": "In mid-2027, the US and Denmark sign an agreement and the US purchases the northern portion (but not a majority) of Greenland. This occurs after Polymarket's Dec 31, 2026 deadline and involves only part\u2014not a majority\u2014of the territory.",
+  "scenario_yes_venue": "kalshi",
+  "summary": "These two markets reference the same Greenland-acquisition event but diverge sharply. The most decisive difference is the deadline: Kalshi runs to Jan 20, 2029 while Polymarket closes Dec 31, 2026, so any qualifying event in 2027\u20132029 counts only on Kalshi. They also differ on trigger scope: Kalshi needs a 'purchase' of 'at least part,' while Polymarket needs a sovereignty transfer/announcement of the 'majority' of the territory by any means. A partial, post-2026, or announcement-only event can settle the two venues oppositely."
+}

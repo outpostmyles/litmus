@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "topic": "deadline",
+      "severity": 92,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+      "polymarket_clause": "This market will resolve to \u201cYes\u201d if the United States acquires control of any land territory that is part of Greenland by December 31, 2026, 11:59 PM ET.",
+      "explanation": "Kalshi's window runs to January 20, 2029 while Polymarket's closes December 31, 2026. Any qualifying acquisition in 2027 or 2028 counts on Kalshi but is too late for Polymarket, producing opposite settlements on the same event."
+    },
+    {
+      "topic": "trigger",
+      "severity": 80,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark",
+      "polymarket_clause": "Only the transfer of sovereignty, or the acquisition of primary or exclusive jurisdiction or control qualifies. ... 3. Use of Force: If the U.S. acquires primary or exclusive jurisdiction or control over a defined area of Greenland through force, this will also qualify.",
+      "explanation": "Kalshi requires a monetary 'purchase' from Denmark. Polymarket qualifies on any transfer of sovereignty OR primary/exclusive jurisdiction/control, expressly including acquisition by force. A takeover by force or a Guantanamo-style exclusive-control zone (no purchase, no payment to Denmark) settles Yes on Polymarket but not on Kalshi."
+    },
+    {
+      "topic": "trigger",
+      "severity": 55,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+      "polymarket_clause": "An announcement will qualify only if it is accompanied by or consists of a binding agreement or legal instrument (e.g., enacted legislation, a signed treaty, the signed text of an agreement, or an executive action implementing such an agreement) that unambiguously creates a transfer of sovereignty, or primary or exclusive jurisdiction or control, even if this transfer or acquisition takes effect after the market deadline.",
+      "explanation": "Polymarket explicitly triggers on the signing of a binding instrument even if the actual handover/effective date is later. Kalshi's 'purchases' is ambiguous as to whether a signed-but-not-yet-completed deal counts; if Kalshi reads 'purchases' as requiring completed transfer of title, a signed 2026 agreement with a 2027 handover could settle Yes on Polymarket while Kalshi waits for completion."
+    },
+    {
+      "topic": "source",
+      "severity": 25,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+      "polymarket_clause": "The primary resolution source for this market will be official information from the governments of the United States, Denmark, and Greenland; however, a consensus of credible reporting may also be used.",
+      "explanation": "Kalshi names no resolution source, leaving it to Kalshi's own determination, while Polymarket relies on official government info plus consensus reporting. In a contested or ambiguous acquisition these different evidentiary standards could lead each venue to a different conclusion on whether a qualifying purchase/acquisition occurred."
+    },
+    {
+      "topic": "carveout",
+      "severity": 30,
+      "kalshi_clause": "If the United States purchases at least part of Greenland from Denmark",
+      "polymarket_clause": "Basing rights, access agreements, SOFA-type arrangements, COFA-type arrangements, commercial concessions, or other permissions to use land (including leases) will not alone qualify. Any qualifying U.S. jurisdiction or control in Greenland that existed at market creation will not count as new qualifying control.",
+      "explanation": "Polymarket spells out exclusions (leases, basing rights, pre-existing control) and requires the counterparty-agnostic acquisition of control. Kalshi requires a 'purchase ... from Denmark' with no such carveouts. A deal negotiated with Greenland's home-rule government rather than Denmark, or a long-term lease styled as a sale, could be read differently across the two rulebooks."
+    }
+  ],
+  "scenario_that_splits": "In mid-2028 the U.S. signs and Denmark ratifies a treaty selling the Thule/Pituffik region to the United States. The purchase occurs before January 20, 2029, so Kalshi resolves Yes. But the deal happens after December 31, 2026, so Polymarket has already resolved No.",
+  "scenario_yes_venue": "kalshi",
+  "summary": "The pair references the same event but the rulebooks diverge sharply. The dominant split is the deadline: Kalshi runs to Jan 20, 2029 while Polymarket closes Dec 31, 2026, so any acquisition in 2027\u20132028 is Kalshi-Yes/Polymarket-No. The trigger also differs materially: Kalshi requires a 'purchase from Denmark,' whereas Polymarket qualifies on any transfer of sovereignty or primary/exclusive control including seizure by force or a signed-but-not-yet-effective instrument, so a non-purchase takeover in 2026 would be Polymarket-Yes/Kalshi-No. Source and carveout differences add secondary divergence."
+}
