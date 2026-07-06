@@ -50,6 +50,8 @@ export async function GET() {
       /** Recent price series for the sparkline (last 30 points). */
       history: series ? series.slice(-30) : [],
       url: e.url,
+      scanLane: e.scanLane ?? 'daily',
+      detectedAt: e.detectedAt ?? null,
       score: scores[e.rulebookHash] ?? null,
     }
   })

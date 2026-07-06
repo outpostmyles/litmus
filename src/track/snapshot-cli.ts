@@ -1,5 +1,5 @@
 import { loadCatalog, loadScores } from '../cache/store'
-import { edgeTag, STALE_HOURS } from '../../lib/litmus'
+import { lockPrediction } from './lock'
 import { loadTrack, saveTrack, type Track } from './store'
 
 // Lock a prediction for every scored market we aren't already tracking. Entry price
@@ -40,46 +40,16 @@ function main(): void {
 
   const { kept: track, removed } = prune(loadTrack())
 
+  // All locking invariants live in lockPrediction (src/track/lock.ts) — shared with
+  // the fast-scan lane so the two lanes can never diverge or double-lock.
   let added = 0
   let skippedClosed = 0
   let skippedStale = 0
   for (const e of catalog) {
-    const s = scores[e.rulebookHash]
-    if (!s || track[e.rulebookHash]) continue
-    // Don't lock a prediction on a market that has already resolved — the entry price
-    // would be post-close (look-ahead). Only open markets get an honest entry.
-    if (alreadyClosed(e.closeDate, now)) {
-      skippedClosed++
-      continue
-    }
-    // Don't lock an entry at a stale cached price either — if ingest failed, the live
-    // market may have already converged, and a phantom dislocation would flatter the
-    // paper P&L. The market locks on the next fresh ingest instead.
-    const priceAge = e.priceAsOf ? (now - Date.parse(e.priceAsOf)) / 3_600_000 : null
-    if (e.priceYes != null && priceAge != null && priceAge > STALE_HOURS) {
-      skippedStale++
-      continue
-    }
-    const edge = edgeTag(s.literalFavors, e.priceYes, s.leanConfidence, s.leanCrowdConsistent)
-    track[e.rulebookHash] = {
-      hash: e.rulebookHash,
-      platform: e.platform,
-      marketId: e.marketId,
-      question: e.question,
-      closeDate: e.closeDate,
-      snapshotAt: new Date().toISOString(),
-      combined: s.combined,
-      band: s.band,
-      headlineRisk: s.headlineRisk,
-      edgeSide: edge ? edge.side : null,
-      entryPriceYes: e.priceYes ?? null,
-      settled: false,
-      // Generation of the edge rule that made this call (3 = confidence + crowd-consistency
-      // gated). Older locked entries keep their original edgeSide — a locked prediction is
-      // never rewritten — but the record can be segmented by generation.
-      edgeVersion: 3,
-    }
-    added++
+    const result = lockPrediction(e, scores[e.rulebookHash], track, now)
+    if (result === 'locked') added++
+    else if (result === 'closed') skippedClosed++
+    else if (result === 'stale-price') skippedStale++
   }
   saveTrack(track)
   const total = Object.keys(track).length

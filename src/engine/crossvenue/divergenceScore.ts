@@ -5,6 +5,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import * as z from 'zod/v4'
+import { recordUsage } from '../../lib/spend'
 import type { MarketBrief } from './matchConfirm'
 
 export const DIVERGENCE_TOPICS = [
@@ -89,9 +90,10 @@ export async function scoreDivergence(
     max_tokens: 16000,
     thinking: { type: 'adaptive' },
     output_config: { format: zodOutputFormat(DivergenceSchema) },
-    system: SYSTEM,
+    system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
     messages: [{ role: 'user', content: buildDivergencePrompt(kalshi, poly) }],
   })
+  recordUsage('crossvenue:divergence', model, res.usage)
   if (res.stop_reason === 'refusal') throw new Error('divergence scoring was refused')
   if (!res.parsed_output) throw new Error('divergence scoring returned no structured output')
   return DivergenceSchema.parse(res.parsed_output)

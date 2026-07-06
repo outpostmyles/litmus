@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getConfig } from '../lib/env'
 import { scoreMarket } from '../engine/score'
+import { confirmLargeRun, budgetAllows, spendSummary } from '../lib/spend'
 import { loadCatalog, loadScores, saveScores, type CachedScore } from './store'
 import type { MarketInput } from '../engine/types'
 
@@ -28,15 +29,27 @@ async function main(): Promise<void> {
     return
   }
 
+  // Cost controls: >50 items needs explicit confirmation; the daily budget is a
+  // hard stop that defers (never silently drops) the remainder.
+  if (!(await confirmLargeRun(todo.length, todo.length * 0.05, 'backfill'))) return
+
   const cfg = getConfig()
   const client = new Anthropic({ apiKey: cfg.apiKey, baseURL: cfg.baseURL })
   console.log(`\n  Scoring ${todo.length} rulebooks on ${cfg.model}  (~$${(todo.length * 0.05).toFixed(2)} on Opus)…\n`)
 
   let done = 0
   let errored = 0
+  let deferred = 0
   let next = 0
   async function worker(): Promise<void> {
     while (next < todo.length) {
+      const budget = budgetAllows()
+      if (!budget.ok) {
+        deferred += todo.length - next
+        next = todo.length
+        console.log(`  budget exhausted — deferring the remaining ${deferred} rulebooks to a later run.`)
+        return
+      }
       const e = todo[next++]!
       const market: MarketInput = {
         platform: e.platform,
@@ -59,6 +72,7 @@ async function main(): Promise<void> {
           summary: s.summary,
           model: s.model,
           scoredAt: new Date().toISOString(),
+          scanLane: 'daily',
         } satisfies CachedScore
         saveScores(scores) // incremental → resumable if interrupted
         done++
@@ -71,7 +85,9 @@ async function main(): Promise<void> {
   }
 
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, todo.length) }, () => worker()))
-  console.log(`\n  Scored ${done}${errored ? ` (${errored} errored)` : ''}. Cache now holds ${Object.keys(scores).length} rulebooks.\n`)
+  console.log(
+    `\n  Scored ${done}${errored ? ` (${errored} errored)` : ''}${deferred ? ` (${deferred} deferred — budget)` : ''}. Cache now holds ${Object.keys(scores).length} rulebooks. ${spendSummary()}.\n`,
+  )
 }
 
 main().catch((e) => {

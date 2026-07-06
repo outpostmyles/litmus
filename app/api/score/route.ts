@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { scoreMarket } from '@/src/engine/score'
+import { budgetAllows } from '@/src/lib/spend'
 import { fetchKalshiMarket } from '@/src/platforms/kalshi'
 import { fetchPolymarketMarket } from '@/src/platforms/polymarket'
 import type { MarketInput } from '@/src/engine/types'
@@ -9,6 +10,13 @@ export const maxDuration = 120
 
 export async function POST(req: Request) {
   try {
+    // The daily budget is a hard stop for SCORING everywhere, Lookup included.
+    if (!budgetAllows().ok) {
+      return NextResponse.json(
+        { error: 'Daily scoring budget reached — try again tomorrow or raise LITMUS_DAILY_BUDGET_USD.' },
+        { status: 429 },
+      )
+    }
     const body = await req.json()
     const mode = String(body?.mode ?? 'text')
     const value = String(body?.value ?? '').trim()

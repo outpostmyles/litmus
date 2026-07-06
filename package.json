@@ -17,6 +17,7 @@
     "snapshot": "tsx src/track/snapshot-cli.ts",
     "settle": "tsx src/track/settle-cli.ts",
     "crossvenue": "tsx src/cache/crossvenue-cli.ts",
+    "watch": "tsx src/watcher/daemon.ts",
     "pairs-settle": "tsx src/cache/pairs-settle-cli.ts",
     "backtest": "tsx src/backtest/run.ts",
     "typecheck": "tsc --noEmit",

@@ -47,6 +47,10 @@ export interface CatalogEntry {
   priceAsOf: string | null
   url: string | null
   fetchedAt: string
+  /** Which lane discovered this market: the daily sweep or the fast-scan watcher. */
+  scanLane?: 'daily' | 'fast'
+  /** When the fast-scan watcher first saw the market listed. */
+  detectedAt?: string
 }
 
 export interface CachedScore {
@@ -75,6 +79,9 @@ export interface CachedScore {
   leanClauseQuote?: string | null
   /** True when the current price is already consistent with a correct literal reading. */
   leanCrowdConsistent?: boolean
+  /** Provenance: which lane produced this score, and when the market was detected. */
+  scanLane?: 'daily' | 'fast'
+  detectedAt?: string
 }
 
 export function loadCatalog(): CatalogEntry[] {

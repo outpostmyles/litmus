@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getConfig } from '../lib/env'
+import { budgetAllows, confirmLargeRun, spendSummary } from '../lib/spend'
 import { acquireRunLock } from '../lib/runlock'
 import { STALE_HOURS } from '../../lib/litmus'
 import { loadCatalog, type CatalogEntry } from './store'
@@ -110,8 +111,10 @@ async function main(): Promise<void> {
   }
 
   if (needConfirm.length) {
+    if (!(await confirmLargeRun(needConfirm.length, needConfirm.length * EST_CONFIRM_COST, 'crossvenue match'))) return
     console.log(`  Confirming ${needConfirm.length} pairs on ${MATCH_MODEL} (~$${(needConfirm.length * EST_CONFIRM_COST).toFixed(2)})…`)
     await mapPool(needConfirm, CONCURRENCY, async (p) => {
+      if (!budgetAllows().ok) return // deferred to a later run — pair stays uncached
       const k = byHash.get(p.kalshiHash)
       const m = byHash.get(p.polyHash)
       if (!k || !m) return
@@ -135,6 +138,7 @@ async function main(): Promise<void> {
     getClient()
     console.log(`\n  Divergence-scoring ${needDiverge.length} confirmed pairs on ${engineModel} (~$${(needDiverge.length * EST_DIVERGE_COST).toFixed(2)})…`)
     await mapPool(needDiverge, CONCURRENCY, async (p) => {
+      if (!budgetAllows().ok) return // deferred — stays uncached for the next run
       const k = byHash.get(p.kalshiHash)
       const m = byHash.get(p.polyHash)
       if (!k || !m) return

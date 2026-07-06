@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { getConfig } from '../lib/env'
+import { recordUsage } from '../lib/spend'
 import { ScoreSchema, type MarketInput, type RawScore } from './types'
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt'
 import {
@@ -60,9 +61,12 @@ export async function scoreMarket(market: MarketInput, opts: ScoreOptions = {}):
       effort: opts.effort ?? 'high',
       format: zodOutputFormat(ScoreSchema),
     },
-    system: SYSTEM_PROMPT,
+    // The rubric is identical for every market in a run — prompt caching makes
+    // repeat reads bill at ~10% of standard input.
+    system: [{ type: 'text' as const, text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } }],
     messages: [{ role: 'user', content: buildUserPrompt(market) }],
   })
+  recordUsage('score', config.model, response.usage)
 
   if (response.stop_reason === 'refusal') {
     throw new Error('The model refused to score this market (safety classifier).')

@@ -5,6 +5,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import * as z from 'zod/v4'
+import { recordUsage } from '../../lib/spend'
 
 export const MatchSchema = z.object({
   /**
@@ -64,9 +65,10 @@ export async function confirmMatch(
     model,
     max_tokens: 600,
     output_config: { format: zodOutputFormat(MatchSchema) },
-    system: SYSTEM,
+    system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
     messages: [{ role: 'user', content: buildMatchPrompt(kalshi, poly) }],
   })
+  recordUsage('crossvenue:match', model, res.usage)
   if (!res.parsed_output) throw new Error('match confirmation returned no structured output')
   return MatchSchema.parse(res.parsed_output)
 }

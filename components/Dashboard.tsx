@@ -57,6 +57,8 @@ interface Item {
   delta7d: number | null
   history: PricePoint[]
   url: string | null
+  scanLane: 'daily' | 'fast'
+  detectedAt: string | null
   score: {
     combined: number
     band: RiskBand
@@ -188,6 +190,7 @@ export function Dashboard() {
   const [sort, setSort] = useState<'risk' | 'live' | 'edge' | 'volume' | 'closing'>('live')
   const [edgesOnly, setEdgesOnly] = useState(false)
   const [watchOnly, setWatchOnly] = useState(false)
+  const [newOnly, setNewOnly] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
 
   async function load() {
@@ -248,6 +251,9 @@ export function Dashboard() {
 
   const dataAge = ageOf(data?.dataAsOf)
   const isStale = data?.dataAsOf ? Date.now() - Date.parse(data.dataAsOf) > STALE_HOURS * 3_600_000 : false
+  const NEW_HOURS = 48
+  const isNew = (i: Item) => i.detectedAt != null && Date.now() - Date.parse(i.detectedAt) < NEW_HOURS * 3_600_000
+  const newCount = useMemo(() => items.filter(isNew).length, [items])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -257,6 +263,7 @@ export function Dashboard() {
       if (band !== 'all' && i.score.band !== band) return false
       if (edgesOnly && !itemEdge(i)) return false
       if (watchOnly && !watched.has(i.rulebookHash)) return false
+      if (newOnly && !isNew(i)) return false
       if (q && !i.question.toLowerCase().includes(q) && !i.score.headlineRisk.toLowerCase().includes(q)) return false
       return true
     })
@@ -344,6 +351,15 @@ export function Dashboard() {
             }`}
           >
             <StarIcon filled={watchOnly} size={13} /> watch{watched.size ? ` (${watched.size})` : ''}
+          </button>
+
+          <button
+            onClick={() => setNewOnly((v) => !v)}
+            className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+              newOnly ? 'border-emerald-400/50 bg-emerald-400/10 text-emerald-300' : 'border-line text-muted hover:text-fg'
+            }`}
+          >
+            new{newCount ? ` (${newCount})` : ''}
           </button>
 
           <input
@@ -474,6 +490,12 @@ export function Dashboard() {
                     {live != null && live !== it.score.combined && <span className="text-faint/80">live {live}</span>}
                     {it.marketCount > 1 && <span className="text-faint/70">×{it.marketCount}</span>}
                     {closes && <span className="text-faint/70">{closes}</span>}
+                    {isNew(it) && (
+                      <span className="rounded-md bg-emerald-400/10 px-1.5 py-0.5 text-[0.6rem] text-emerald-300">
+                        new · {ageOf(it.detectedAt) ?? ''}
+                        {it.scanLane === 'fast' ? ' · fast-scan' : ''}
+                      </span>
+                    )}
                     {!it.score.namedSource && <span className="text-rose-300">no source</span>}
                     {edge && (
                       <span className="rounded-md bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">

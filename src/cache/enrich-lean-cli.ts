@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import * as z from 'zod/v4'
 import { getConfig } from '../lib/env'
+import { recordUsage, budgetAllows, confirmLargeRun } from '../lib/spend'
 import { loadCatalog, loadScores, saveScores } from './store'
 
 // A market's directional lean is a narrow read grounded in the RULES TEXT plus the
@@ -63,6 +64,8 @@ async function main(): Promise<void> {
     return
   }
 
+  if (!(await confirmLargeRun(todo.length, todo.length * 0.005, 'enrich'))) return
+
   const cfg = getConfig()
   const client = new Anthropic({ apiKey: cfg.apiKey, baseURL: cfg.baseURL })
   console.log(
@@ -71,8 +74,15 @@ async function main(): Promise<void> {
 
   let next = 0
   let done = 0
+  let deferred = 0
   async function worker(): Promise<void> {
     while (next < todo.length) {
+      if (!budgetAllows().ok) {
+        deferred += todo.length - next
+        next = todo.length
+        console.log(`  budget exhausted — deferring ${deferred} leans to a later run.`)
+        return
+      }
       const [hash, s] = todo[next++]!
       const ctx = byHash.get(hash)
       const q = ctx?.question || '(market)'
@@ -87,9 +97,10 @@ async function main(): Promise<void> {
           model: MODEL,
           max_tokens: 700,
           output_config: { format: zodOutputFormat(LeanSchema) },
-          system: SYSTEM,
+          system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
           messages: [{ role: 'user', content: user }],
         })
+        recordUsage('lean', MODEL, res.usage)
         if (!res.parsed_output) throw new Error('no structured output')
         const parsed = LeanSchema.parse(res.parsed_output)
         s.literalFavors = parsed.favors

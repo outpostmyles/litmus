@@ -37,6 +37,10 @@ export interface TrackEntry {
   disputeSeen?: string
   /** Which edge-rule generation locked this prediction (3 = confidence+crowd-gated). */
   edgeVersion?: number
+  /** Provenance: lane that produced the prediction + when the listing was detected —
+   * lets the record prove "flagged N minutes after listing". */
+  scanLane?: 'daily' | 'fast'
+  detectedAt?: string
 }
 
 export type Track = Record<string, TrackEntry>
