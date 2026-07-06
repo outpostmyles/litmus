@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { riskColor, edgeTag, actionability, type ScoreResult } from '@/lib/litmus'
 import { RiskGauge } from './RiskGauge'
 import { DimensionRow } from './DimensionRow'
-import { VerdictLine, KillerClause } from './Verdict'
+import { VerdictLine, KillerClause, YourTrade } from './Verdict'
 
 function fmtDate(iso?: string | null): string | null {
   if (!iso) return null
@@ -114,6 +114,8 @@ export function ResultCard({ r }: { r: ScoreResult }) {
                 <div className="mt-4">
                   <KillerClause v={r.verdict} />
                 </div>
+                {/* The trade answer: does the fine print help or hurt YOUR side? */}
+                <YourTrade v={r.verdict} priceYes={r.market.priceYes} />
               </>
             ) : (
               <>

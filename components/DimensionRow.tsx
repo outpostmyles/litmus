@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { riskColor, type DimensionResult } from '@/lib/litmus'
+import { riskColor, GLOSSARY, type DimensionResult } from '@/lib/litmus'
 
 /** First sentence of the reasoning — the L3 one-liner. */
 function firstSentence(s: string): string {
@@ -17,7 +17,12 @@ export function DimensionRow({ d, index = 0 }: { d: DimensionResult; index?: num
     <details className="group py-4">
       <summary className={`list-none ${hasMore ? 'cursor-pointer' : ''}`}>
         <div className="flex items-baseline justify-between gap-4">
-          <span className="text-[0.95rem] font-medium text-fg">{d.label}</span>
+          <span
+            className="text-[0.95rem] font-medium text-fg"
+            title={(GLOSSARY as Record<string, string>)[d.key] ?? undefined}
+          >
+            {d.label}
+          </span>
           <span className="flex items-center gap-2">
             <span className="mono text-sm tabular-nums" style={{ color }}>
               {d.score}

@@ -41,3 +41,40 @@ describe('gateVerdict — the short layer never overclaims', () => {
     expect(g.lean).toBe('NO')
   })
 })
+
+describe('gateSides — stances never contradict the lean', () => {
+  const sides = (yes: 'HELPS' | 'HURTS' | 'NEUTRAL' | 'UNCLEAR', no: typeof yes) => ({
+    yes_holder: { stance: yes, line: 'a line for yes holders' },
+    no_holder: { stance: no, line: 'a line for no holders' },
+    holder_note: null,
+  })
+  it('consistent sides pass: lean NO helps NO holders, hurts YES holders', () => {
+    const g = gateVerdict(v({ ...sides('HURTS', 'HELPS') }), [RULES])
+    expect(g.yes_holder!.stance).toBe('HURTS')
+    expect(g.no_holder!.stance).toBe('HELPS')
+  })
+  it('a contradiction collapses BOTH sides to UNCLEAR (never invent asymmetry)', () => {
+    const g = gateVerdict(v({ ...sides('HELPS', 'HURTS') }), [RULES]) // lean NO but yes=HELPS
+    expect(g.yes_holder!.stance).toBe('UNCLEAR')
+    expect(g.no_holder!.stance).toBe('UNCLEAR')
+  })
+  it('UNCLEAR lean forbids directional stances but keeps NEUTRAL', () => {
+    const g = gateVerdict(v({ killer_clause: null, ...sides('HURTS', 'NEUTRAL') }), [RULES])
+    expect(g.lean).toBe('UNCLEAR')
+    expect(g.yes_holder!.stance).toBe('UNCLEAR')
+    expect(g.no_holder!.stance).toBe('NEUTRAL')
+  })
+  it('caps side lines at 18 words and holder_note at 15', () => {
+    const long = Array(25).fill('w').join(' ')
+    const g = gateVerdict(
+      v({ yes_holder: { stance: 'HURTS', line: long }, no_holder: { stance: 'HELPS', line: long }, holder_note: long }),
+      [RULES],
+    )
+    expect(g.no_holder!.line.split(' ')).toHaveLength(18)
+    expect(g.holder_note!.split(' ')).toHaveLength(15)
+  })
+  it('absent sides pass through untouched (pre-P11 verdicts)', () => {
+    const g = gateVerdict(v(), [RULES])
+    expect(g.yes_holder).toBeUndefined()
+  })
+})

@@ -132,7 +132,12 @@ export function TrackClient() {
     load()
   }, [])
 
-  if (loading && !data) return <div className="glass rounded-2xl px-6 py-16 text-center text-sm text-muted">Loading track record…</div>
+  if (loading && !data)
+    return (
+      <div className="glass rounded-2xl px-6 py-16 text-center text-sm text-muted">
+        Loading the track record — every prediction Litmus locked, graded against what actually settled.
+      </div>
+    )
   if (error) return <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>
   if (!data) return null
 
@@ -210,7 +215,10 @@ export function TrackClient() {
             resolved · {counts.pending} open · {counts.tracked} tracked
           </div>
           {baseline && (
-            <div className="mono mt-1 text-xs text-muted">
+            <div
+              className="mono mt-1 text-xs text-muted"
+              title="Brier: accuracy score for probability forecasts — lower is better; Litmus has to beat the raw market price."
+            >
               brier — crowd {baseline.crowd.toFixed(4)} · litmus {baseline.litmus.toFixed(4)} · n={baseline.n}
             </div>
           )}

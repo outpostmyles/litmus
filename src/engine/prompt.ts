@@ -42,6 +42,8 @@ Then return:
   - trap_phrase: <= 8 words naming the single most dangerous concept (e.g. "partial control counts", "announcement alone settles Yes").
   - killer_clause: the ONE worst clause, quoted VERBATIM from the rules. If you cannot quote a clause, return null — and the lean must then be UNCLEAR. The short layer never claims what the text can't back.
   - so_what: <= 15 words: what a holder should understand (e.g. "a partial port deal settles YES — full takeover not required").
+  - yes_holder / no_holder: the trade answer per SIDE — does the fine print HELP or HURT a holder of that side? {stance: HELPS/HURTS/NEUTRAL/UNCLEAR, line: <= 18 words, plain language a first-time trader understands, no jargon}. Stances must follow from the lean and killer_clause: a lean toward YES helps YES holders and hurts NO holders. If the text supports no direction, both stances are UNCLEAR — never invent asymmetry.
+  - holder_note: <= 15 words for EXISTING position holders (a key date, amendment risk, an exit-relevant fact) when applicable, else null.
 - named_source: what the resolution source actually is (paraphrased), or null if none is named.
 - assumed_vs_actual: if there is a literal-vs-intuitive gap, one line — "Casual reading: X. Literal text: Y." — else null.
 - headline_risk: the single sharpest way this market could surprise its traders, in one sentence. If the market is genuinely clean, say so plainly.

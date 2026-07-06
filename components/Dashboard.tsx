@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import {
   riskColor,
   BAND_LABEL,
+  GLOSSARY,
   edgeTag,
   actionability,
   liveRisk,
@@ -16,7 +17,7 @@ import {
   type LiteralFavors,
 } from '@/lib/litmus'
 import { ResultCard } from './ResultCard'
-import { VerdictLine, type VerdictData } from './Verdict'
+import { VerdictLine, SideGlyphs, type VerdictData } from './Verdict'
 
 function StarIcon({ filled, size = 16 }: { filled: boolean; size?: number }) {
   return (
@@ -340,6 +341,7 @@ export function Dashboard() {
 
           <button
             onClick={() => setEdgesOnly((v) => !v)}
+            title={GLOSSARY.edge}
             className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
               edgesOnly ? 'border-brand/50 bg-brand/10 text-brand' : 'border-line text-muted hover:text-fg'
             }`}
@@ -406,7 +408,8 @@ export function Dashboard() {
             )}
             {data.unscoredCount > 0 && (
               <span className="text-amber-300/80">
-                {data.unscoredCount} not yet scored — run <span className="text-amber-200">npm run backfill</span>
+                {data.unscoredCount} not yet scored — new listings score automatically within ~2 min; the rest on the
+                next <span className="text-amber-200">npm run backfill</span>
               </span>
             )}
           </div>
@@ -434,6 +437,12 @@ export function Dashboard() {
 
       {error && (
         <p className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>
+      )}
+
+      {loading && !data && (
+        <div className="glass mt-6 rounded-2xl px-6 py-16 text-center text-sm text-muted">
+          Loading the board — scores come from the local cache, so this takes about a second.
+        </div>
       )}
 
       {!loading && data && data.scoredCount === 0 && !error && (
@@ -490,7 +499,11 @@ export function Dashboard() {
                     <span className="text-muted">{fmtVol(it.platform, it.volume)}</span>
                     {price && <span className="text-fg/80">Yes {price}</span>}
                     {delta && <span className="text-fg/60">Δ24h {delta}</span>}
-                    {live != null && live !== it.score.combined && <span className="text-faint/80">live {live}</span>}
+                    {live != null && live !== it.score.combined && (
+                      <span className="text-faint/80" title={GLOSSARY.liveRisk}>
+                        live {live}
+                      </span>
+                    )}
                     {it.marketCount > 1 && <span className="text-faint/70">×{it.marketCount}</span>}
                     {closes && <span className="text-faint/70">{closes}</span>}
                     {isNew(it) && (
@@ -501,15 +514,16 @@ export function Dashboard() {
                     )}
                     {!it.score.namedSource && <span className="text-rose-300">no source</span>}
                     {edge && (
-                      <span className="rounded-md bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand">
+                      <span className="rounded-md bg-brand/15 px-1.5 py-0.5 text-[0.6rem] text-brand" title={`${GLOSSARY.edge} "act" — ${GLOSSARY.act}`}>
                         act {act} · {edge.label}
                       </span>
                     )}
                   </div>
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
                   {it.score.verdict ? (
-                    <div className="mt-1 flex min-w-0">
+                    <div className="mt-1 flex min-w-0 items-baseline gap-2.5">
                       <VerdictLine v={it.score.verdict} compact />
+                      <SideGlyphs v={it.score.verdict} />
                     </div>
                   ) : (
                     <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">{it.score.headlineRisk}</div>

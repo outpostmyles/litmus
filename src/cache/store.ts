@@ -95,6 +95,10 @@ export interface CachedScore {
     trap_phrase: string
     killer_clause: string | null
     so_what: string
+    /** Per-side trade answer (P11): risk is directional — holders hold SIDES. */
+    yes_holder?: { stance: 'HELPS' | 'HURTS' | 'NEUTRAL' | 'UNCLEAR'; line: string } | null
+    no_holder?: { stance: 'HELPS' | 'HURTS' | 'NEUTRAL' | 'UNCLEAR'; line: string } | null
+    holder_note?: string | null
   }
 }
 

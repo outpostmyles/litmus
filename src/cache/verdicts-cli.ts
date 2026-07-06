@@ -3,7 +3,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import * as z from 'zod/v4'
 import { getConfig } from '../lib/env'
 import { recordUsage, budgetAllows, confirmLargeRun, spendSummary } from '../lib/spend'
-import { VerdictSchema, gateVerdict } from '../engine/verdict'
+import { VerdictSchema, SideStanceSchema, gateVerdict, gateSides } from '../engine/verdict'
 import { loadCatalog, loadScores, saveScores } from './store'
 import { loadPairs, savePairs } from './pairs-store'
 
@@ -27,6 +27,21 @@ The verdict may never claim more than the analysis supports.`
 
 const PairShortSchema = z.object({ splits_if_short: z.string().nullable() })
 
+const SidesSchema = z.object({
+  yes_holder: SideStanceSchema,
+  no_holder: SideStanceSchema,
+  holder_note: z.string().nullable(),
+})
+
+const SIDES_SYSTEM = `You turn a finished prediction-market resolution-risk verdict into the per-SIDE trade answer. Traders hold sides, not markets: the same trap that endangers NO holders often helps YES holders.
+
+Given the verdict (lean, trap phrase, killer clause) and the analysis, return for each side:
+- stance: HELPS / HURTS / NEUTRAL / UNCLEAR — does the fine print help or hurt a holder of that side?
+- line: <= 18 words, PLAIN language a first-time trader understands. No jargon, no "resolution criteria", no "dimension". Example for a yes-holder: "Partial events count — the bar is lower than the headline implies." Example for a no-holder: "Danger: a partial deal you would never call a takeover can settle YES against you."
+
+Rules: stances must follow from the lean — a lean toward YES helps YES holders and hurts NO holders. If the analysis supports no direction, both stances are UNCLEAR. Never invent asymmetry.
+Also return holder_note: <= 15 words for EXISTING holders (key date, amendment risk, exit-relevant fact) when applicable, else null.`
+
 async function main(): Promise<void> {
   const force = process.argv.includes('--force')
   const catalog = loadCatalog()
@@ -34,16 +49,21 @@ async function main(): Promise<void> {
   const scores = loadScores()
 
   const todo = Object.entries(scores).filter(([, s]) => force || !s.verdict)
+  // Sides phase: verdicts that predate the per-side layer (P11) get a lighter pass.
+  const sidesTodo = Object.entries(scores).filter(
+    ([, s]) => s.verdict && (force || s.verdict.yes_holder === undefined),
+  )
   const pairs = loadPairs()
   const pairTodo = Object.values(pairs).filter(
     (p) => p.divergence && (force || p.divergence.splits_if_short === undefined),
   )
 
-  if (!todo.length && !pairTodo.length) {
-    console.log('\n  Every cached analysis already carries a verdict. ✓\n')
+  if (!todo.length && !sidesTodo.length && !pairTodo.length) {
+    console.log('\n  Every cached analysis already carries a verdict + sides. ✓\n')
     return
   }
-  if (!(await confirmLargeRun(todo.length + pairTodo.length, (todo.length + pairTodo.length) * 0.004, 'verdicts'))) return
+  const totalItems = todo.length + sidesTodo.length + pairTodo.length
+  if (!(await confirmLargeRun(totalItems, totalItems * 0.004, 'verdicts'))) return
 
   const cfg = getConfig()
   const client = new Anthropic({ apiKey: cfg.apiKey, baseURL: cfg.baseURL })
@@ -93,6 +113,47 @@ async function main(): Promise<void> {
   }
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, Math.max(todo.length, 1)) }, () => worker()))
 
+  // Sides phase: derive the per-side trade answer for verdicts that lack it.
+  let sidesNext = 0
+  let sidesDone = 0
+  async function sidesWorker(): Promise<void> {
+    while (sidesNext < sidesTodo.length) {
+      if (!budgetAllows().ok) {
+        console.log(`  budget exhausted — deferring ${sidesTodo.length - sidesNext} side passes.`)
+        sidesNext = sidesTodo.length
+        return
+      }
+      const [hash, s] = sidesTodo[sidesNext++]!
+      const v = s.verdict!
+      const user =
+        `Verdict: lean ${v.lean} (confidence ${v.lean_confidence}) · trap: ${v.trap_phrase}\n` +
+        `Killer clause: ${v.killer_clause ?? '(none quotable)'}\nSo what: ${v.so_what}\n\n` +
+        `Analysis:\nHeadline risk: ${s.headlineRisk}\nSummary: ${s.summary}\nAssumed vs actual: ${s.assumedVsActual ?? '(none)'}`
+      try {
+        const res = await client.messages.parse({
+          model: MODEL,
+          max_tokens: 500,
+          output_config: { format: zodOutputFormat(SidesSchema) },
+          system: [{ type: 'text' as const, text: SIDES_SYSTEM, cache_control: { type: 'ephemeral' as const } }],
+          messages: [{ role: 'user', content: user }],
+        })
+        recordUsage('verdict', MODEL, res.usage)
+        if (!res.parsed_output) throw new Error('no structured output')
+        const gated = gateSides(v.lean, SidesSchema.parse(res.parsed_output))
+        s.verdict = { ...v, ...gated }
+        scores[hash] = s
+        saveScores(scores)
+        sidesDone++
+      } catch (err) {
+        process.stdout.write(`  err(sides) ${hash} — ${err instanceof Error ? err.message : String(err)}\n`)
+      }
+    }
+  }
+  if (sidesTodo.length) {
+    console.log(`  Deriving side stances for ${sidesTodo.length} existing verdicts…`)
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, sidesTodo.length) }, () => sidesWorker()))
+  }
+
   // Pairs: compress the split scenario to <= 12 words.
   for (const p of pairTodo) {
     if (!budgetAllows().ok) break
@@ -118,7 +179,9 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`\n  Verdicts: ${done} derived (${unclear} UNCLEAR after gating) · ${pairTodo.length} pair shorts. ${spendSummary()}.\n`)
+  console.log(
+    `\n  Verdicts: ${done} derived (${unclear} UNCLEAR after gating) · ${sidesDone} side passes · ${pairTodo.length} pair shorts. ${spendSummary()}.\n`,
+  )
 }
 
 main().catch((e) => {

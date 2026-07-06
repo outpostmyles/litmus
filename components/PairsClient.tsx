@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { riskColor, ageOf, STALE_HOURS } from '@/lib/litmus'
+import { riskColor, ageOf, GLOSSARY, STALE_HOURS } from '@/lib/litmus'
 
 interface Leg {
   question: string
@@ -102,7 +102,12 @@ export function PairsClient() {
     })()
   }, [])
 
-  if (loading) return <div className="glass rounded-2xl px-6 py-16 text-center text-sm text-muted">Loading pairs…</div>
+  if (loading)
+    return (
+      <div className="glass rounded-2xl px-6 py-16 text-center text-sm text-muted">
+        Loading cross-venue pairs — the same event on both venues, rules diffed clause by clause.
+      </div>
+    )
   if (error) return <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>
   if (!data) return null
 
@@ -159,7 +164,7 @@ export function PairsClient() {
               >
                 <div className="absolute left-0 top-0 h-full w-1" style={{ background: color }} />
                 <div className="flex items-center gap-4">
-                  <div className="flex w-16 shrink-0 flex-col items-center">
+                  <div className="flex w-16 shrink-0 flex-col items-center" title={GLOSSARY.pairRisk}>
                     <span className="mono text-2xl font-semibold leading-none tabular-nums" style={{ color }}>
                       {r.risk}
                     </span>
@@ -175,7 +180,7 @@ export function PairsClient() {
                         {r.sameEvent === 'partial' ? 'partial match' : 'same event'}
                       </span>
                       {r.gap != null && <span className="text-fg/80">gap {Math.round(r.gap * 100)}¢</span>}
-                      <span>divergence {r.base}</span>
+                      <span title={GLOSSARY.divergence}>divergence {r.base}</span>
                       {r.settlement === 'split' && (
                         <span className="rounded bg-rose-400/15 px-1.5 py-0.5 text-rose-300">SPLIT SETTLEMENT</span>
                       )}
@@ -234,6 +239,11 @@ export function PairsClient() {
                         </details>
                       )}
                     </div>
+                  )}
+                  {r.base >= 45 && (
+                    <p className="mono rounded-lg border border-rose-400/25 bg-rose-400/[0.05] px-3 py-2 text-[0.74rem] text-rose-200">
+                      Arb warning: do not treat the price gap as risk-free; legs can settle opposite.
+                    </p>
                   )}
                   <p className="max-w-3xl text-[0.9rem] leading-relaxed text-fg/90">{r.summary}</p>
 

@@ -56,6 +56,9 @@ export interface ScoreResult {
     trap_phrase: string
     killer_clause: string | null
     so_what: string
+    yes_holder?: { stance: 'HELPS' | 'HURTS' | 'NEUTRAL' | 'UNCLEAR'; line: string } | null
+    no_holder?: { stance: 'HELPS' | 'HURTS' | 'NEUTRAL' | 'UNCLEAR'; line: string } | null
+    holder_note?: string | null
   } | null
 }
 
@@ -217,6 +220,27 @@ export const BAND_LABEL: Record<RiskBand, string> = {
   high: 'HIGH',
   severe: 'SEVERE',
 }
+
+/**
+ * One-sentence plain-language definitions for every jargon term, written for a
+ * first-time visitor. Rendered as tooltips wherever the term appears; the Guide
+ * stays the deep layer.
+ */
+export const GLOSSARY = {
+  source_clarity: 'Is there a named, authoritative source this market settles from — or just "credible reporting"?',
+  criteria_precision: 'Is the threshold or triggering event defined exactly, with no wiggle room?',
+  literal_vs_intuitive: 'Could a casual reader assume a different outcome than the written rules actually pay on?',
+  timing: "Can the resolving event slip past the market's deadline or get contested in time?",
+  dispute_surface: 'Does settlement need human judgment, or could the same words be read two ways?',
+  rulesLean: 'Which side the written rules favor when they differ from what most traders assume.',
+  edge: 'The written rules favor one side while the market price favors the other.',
+  liveRisk: "The text's risk score, discounted by how likely the risky scenario is at today's price.",
+  textHazard: "How badly resolution could go wrong IF the rules' gray zone gets triggered.",
+  pairRisk: 'How likely the two venues settle the same event differently, scaled by their price gap.',
+  divergence: "How much the two venues' written rules differ for the same real-world event.",
+  brier: 'Accuracy score for probability forecasts — lower is better; Litmus has to beat the raw market price.',
+  act: 'How tradeable an edge is: price dislocation × time to close × resolution risk.',
+} as const
 
 export const BAND_BLURB: Record<RiskBand, string> = {
   low: 'Resolves the way traders expect.',
