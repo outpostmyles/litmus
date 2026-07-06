@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { riskColor, edgeTag, actionability, type ScoreResult } from '@/lib/litmus'
 import { RiskGauge } from './RiskGauge'
 import { DimensionRow } from './DimensionRow'
+import { VerdictLine, KillerClause } from './Verdict'
 
 function fmtDate(iso?: string | null): string | null {
   if (!iso) return null
@@ -98,18 +99,48 @@ export function ResultCard({ r }: { r: ScoreResult }) {
           </p>
         )}
 
+        {/* L1: gauge + the one-line verdict. Nothing above the fold reads like an essay. */}
         <div className="mt-7 grid items-center gap-8 sm:grid-cols-[auto_1fr]">
           <div className="mx-auto">
             <RiskGauge score={r.combined} />
           </div>
-          <div>
-            <div className="label">headline risk</div>
-            <p className="mt-2 text-[1.08rem] leading-relaxed text-fg">{r.headlineRisk}</p>
-            <p className="mt-4 text-[0.97rem] leading-relaxed text-muted">{r.summary}</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <Meta label="source of truth" value={r.namedSource ?? '— none named —'} warn={!r.namedSource} />
-              {r.assumedVsActual && <Meta label="assumed vs actual" value={r.assumedVsActual} />}
-            </div>
+          <div className="min-w-0">
+            {r.verdict ? (
+              <>
+                <div className="flex min-w-0 flex-wrap items-baseline gap-2">
+                  <VerdictLine v={r.verdict} />
+                </div>
+                {/* L2: the receipt — the ONE clause + what it means for a holder. */}
+                <div className="mt-4">
+                  <KillerClause v={r.verdict} />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="label">headline risk</div>
+                <p className="mt-2 text-[1.08rem] leading-relaxed text-fg">{r.headlineRisk}</p>
+              </>
+            )}
+
+            {/* L3: the full analyst read — every word preserved, demoted behind one expander. */}
+            <details className="group mt-4">
+              <summary className="mono cursor-pointer list-none text-xs text-faint transition-colors hover:text-muted">
+                full analysis ▾
+              </summary>
+              <div className="mt-3 space-y-4">
+                {r.verdict && (
+                  <div>
+                    <div className="label">headline risk</div>
+                    <p className="mt-2 text-[1.02rem] leading-relaxed text-fg">{r.headlineRisk}</p>
+                  </div>
+                )}
+                <p className="text-[0.97rem] leading-relaxed text-muted">{r.summary}</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Meta label="source of truth" value={r.namedSource ?? '— none named —'} warn={!r.namedSource} />
+                  {r.assumedVsActual && <Meta label="assumed vs actual" value={r.assumedVsActual} />}
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       </div>

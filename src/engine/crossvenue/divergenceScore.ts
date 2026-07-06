@@ -40,6 +40,9 @@ export const DivergenceSchema = z.object({
   scenario_that_splits: z.string().nullable(),
   /** Which venue settles Yes in that scenario ('kalshi' | 'polymarket'), null if none. */
   scenario_yes_venue: z.enum(['kalshi', 'polymarket']).nullable(),
+  /** <= 12 words: the split scenario compressed for the 3-second layer. Null with no
+   * scenario; nullish so pre-field cached records still parse (backfill fills them). */
+  splits_if_short: z.string().nullish(),
   /** 2–3 plain-English sentences for a trader holding both legs. */
   summary: z.string(),
 })
@@ -60,7 +63,7 @@ For each material divergence return a divergence item with:
 - kalshi_clause and polymarket_clause: the EXACT verbatim spans from each venue's rules. Never paraphrase inside these fields. If one venue simply LACKS the clause, quote the closest governing text it does have (e.g. its general resolution sentence).
 - explanation: why these two clauses can settle the same event apart.
 
-Then the decisive test — scenario_that_splits: describe ONE concrete, plausible course of real-world events under which venue A settles Yes and venue B settles No. Name which venue is Yes in scenario_yes_venue. If you cannot construct such a scenario, return null for both — textual differences that cannot split a settlement are NOT divergence. Do not force items: a genuinely aligned pair should come back with few or no items and a null scenario.`
+Then the decisive test — scenario_that_splits: describe ONE concrete, plausible course of real-world events under which venue A settles Yes and venue B settles No. Name which venue is Yes in scenario_yes_venue. Also compress it to splits_if_short: <= 12 words (e.g. "a signed announcement without a ratified treaty"). If you cannot construct such a scenario, return null for all three — textual differences that cannot split a settlement are NOT divergence. Do not force items: a genuinely aligned pair should come back with few or no items and a null scenario.`
 
 const RULES_CHARS = 5500
 

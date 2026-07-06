@@ -27,6 +27,7 @@ interface PairRow {
   gap: number | null
   scenario: string | null
   scenarioYesVenue: 'kalshi' | 'polymarket' | null
+  splitsIfShort: string | null
   summary: string
   items: DivergenceItem[]
   kalshi: Leg | null
@@ -193,26 +194,52 @@ export function PairsClient() {
 
               {isOpen && (
                 <div className="glass mt-2 space-y-4 rounded-2xl px-5 py-4">
-                  <p className="max-w-3xl text-[0.9rem] leading-relaxed text-fg/90">{r.summary}</p>
-                  {r.scenario && (
-                    <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-4 py-3">
-                      <div className="label">the scenario that splits them</div>
-                      <p className="mt-1.5 text-[0.88rem] leading-relaxed text-fg/90">
-                        {r.scenario}
-                        {r.scenarioYesVenue && (
-                          <span className="mono ml-2 text-xs text-amber-300">
-                            → {r.scenarioYesVenue === 'kalshi' ? 'Kalshi' : 'Polymarket'} settles Yes
-                          </span>
-                        )}
+                  {/* L1 hero: the split condition in large type, two venue columns. */}
+                  {(r.splitsIfShort || r.scenario) && (
+                    <div className="rounded-xl border border-amber-400/25 bg-amber-400/[0.06] px-4 py-4">
+                      <div className="mono text-[0.66rem] uppercase tracking-[0.14em] text-amber-300">splits if</div>
+                      <p className="mt-1 text-[1.15rem] font-semibold leading-snug text-fg">
+                        {r.splitsIfShort ?? r.scenario}
                       </p>
+                      {r.scenarioYesVenue && (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          <div className="mono rounded-lg border border-line bg-black/20 px-3 py-2 text-xs">
+                            Kalshi{' '}
+                            <span className={r.scenarioYesVenue === 'kalshi' ? 'font-semibold text-emerald-300' : 'font-semibold text-rose-300'}>
+                              → {r.scenarioYesVenue === 'kalshi' ? 'YES' : 'NO'}
+                            </span>
+                          </div>
+                          <div className="mono rounded-lg border border-line bg-black/20 px-3 py-2 text-xs">
+                            Polymarket{' '}
+                            <span className={r.scenarioYesVenue === 'polymarket' ? 'font-semibold text-emerald-300' : 'font-semibold text-rose-300'}>
+                              → {r.scenarioYesVenue === 'polymarket' ? 'YES' : 'NO'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {/* Full scenario preserved under the hero when the short line is shown. */}
+                      {r.splitsIfShort && r.scenario && (
+                        <details className="group mt-3">
+                          <summary className="mono cursor-pointer list-none text-[0.68rem] text-amber-300/70 hover:text-amber-300">
+                            full scenario ▾
+                          </summary>
+                          <p className="mt-2 text-[0.86rem] leading-relaxed text-fg/85">{r.scenario}</p>
+                        </details>
+                      )}
                     </div>
                   )}
+                  <p className="max-w-3xl text-[0.9rem] leading-relaxed text-fg/90">{r.summary}</p>
+                  {/* Severity items: one-line rows expanding to the dual verbatim quotes. */}
                   {r.items.map((it, i) => (
-                    <div key={i} className="rounded-xl border border-line bg-black/20 px-4 py-3">
-                      <div className="mono flex items-center gap-2 text-[0.66rem] uppercase tracking-wider">
+                    <details key={i} className="group rounded-xl border border-line bg-black/20 px-4 py-3">
+                      <summary className="mono flex cursor-pointer list-none items-center gap-2 text-[0.7rem] uppercase tracking-wider">
                         <span className="text-fg">{it.topic}</span>
                         <span className="text-faint">severity {it.severity}</span>
-                      </div>
+                        <span className="min-w-0 flex-1 truncate normal-case tracking-normal text-muted">
+                          {it.explanation}
+                        </span>
+                        <span className="text-faint transition-transform group-open:rotate-90">›</span>
+                      </summary>
                       <div className="mt-2 grid gap-2 sm:grid-cols-2">
                         <div>
                           <div className="mono text-[0.6rem] uppercase tracking-wider text-faint">kalshi says</div>
@@ -224,7 +251,7 @@ export function PairsClient() {
                         </div>
                       </div>
                       <p className="mt-2 text-[0.84rem] leading-relaxed text-fg/85">{it.explanation}</p>
-                    </div>
+                    </details>
                   ))}
                 </div>
               )}

@@ -1,6 +1,7 @@
 // Use the v4 API surface (shipped under this subpath by zod 3.25+) to match
 // the Anthropic SDK's zodOutputFormat helper, which imports from 'zod/v4'.
 import * as z from 'zod/v4'
+import { VerdictSchema } from './verdict'
 
 /**
  * Input to the scoring engine: one market's question + full resolution text +
@@ -68,6 +69,8 @@ export const ScoreSchema = z.object({
   headline_risk: z.string(),
   /** 2–4 plain-English sentences, verdict first, for a pre-trade glance. */
   summary: z.string(),
+  /** The 3-second layer: lean + trap phrase + the ONE killer clause + so-what. */
+  verdict: VerdictSchema,
 })
 
 export type RawScore = z.infer<typeof ScoreSchema>

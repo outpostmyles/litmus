@@ -163,6 +163,7 @@ export async function fastScan(
         scoredAt: new Date().toISOString(),
         scanLane: 'fast',
         detectedAt,
+        verdict: s.verdict,
       }
       scores[entry.rulebookHash] = score
       saveScores(scores)

@@ -82,6 +82,14 @@ export interface CachedScore {
   /** Provenance: which lane produced this score, and when the market was detected. */
   scanLane?: 'daily' | 'fast'
   detectedAt?: string
+  /** The 3-second layer (code-gated). Backfilled for old scores; native on new ones. */
+  verdict?: {
+    lean: 'YES' | 'NO' | 'UNCLEAR'
+    lean_confidence: number
+    trap_phrase: string
+    killer_clause: string | null
+    so_what: string
+  }
 }
 
 export function loadCatalog(): CatalogEntry[] {

@@ -36,6 +36,12 @@ For EACH dimension return:
 - offending_clause: the EXACT span of text from the resolution criteria that earned the flag, quoted verbatim. Use null ONLY when the dimension is genuinely clean.
 
 Then return:
+- verdict — the 3-second layer a trader reads before anything else:
+  - lean: which side the LITERAL rules favor for a casual holder (YES / NO / UNCLEAR). UNCLEAR is the honest default when the text doesn't force a side.
+  - lean_confidence: 0-1.
+  - trap_phrase: <= 8 words naming the single most dangerous concept (e.g. "partial control counts", "announcement alone settles Yes").
+  - killer_clause: the ONE worst clause, quoted VERBATIM from the rules. If you cannot quote a clause, return null — and the lean must then be UNCLEAR. The short layer never claims what the text can't back.
+  - so_what: <= 15 words: what a holder should understand (e.g. "a partial port deal settles YES — full takeover not required").
 - named_source: what the resolution source actually is (paraphrased), or null if none is named.
 - assumed_vs_actual: if there is a literal-vs-intuitive gap, one line — "Casual reading: X. Literal text: Y." — else null.
 - headline_risk: the single sharpest way this market could surprise its traders, in one sentence. If the market is genuinely clean, say so plainly.

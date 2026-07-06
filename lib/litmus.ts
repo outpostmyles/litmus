@@ -49,6 +49,14 @@ export interface ScoreResult {
   leanClauseQuote?: string | null
   /** True when the current price already reflects a correct literal reading — no edge. */
   leanCrowdConsistent?: boolean | null
+  /** The 3-second layer (code-gated). */
+  verdict?: {
+    lean: 'YES' | 'NO' | 'UNCLEAR'
+    lean_confidence: number
+    trap_phrase: string
+    killer_clause: string | null
+    so_what: string
+  } | null
 }
 
 /**

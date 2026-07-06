@@ -16,6 +16,7 @@ import {
   type LiteralFavors,
 } from '@/lib/litmus'
 import { ResultCard } from './ResultCard'
+import { VerdictLine, type VerdictData } from './Verdict'
 
 function StarIcon({ filled, size = 16 }: { filled: boolean; size?: number }) {
   return (
@@ -74,6 +75,7 @@ interface Item {
     leanConfidence?: number
     leanClauseQuote?: string | null
     leanCrowdConsistent?: boolean
+    verdict?: VerdictData | null
   }
 }
 
@@ -135,6 +137,7 @@ function toResult(it: Item): ScoreResult {
     leanConfidence: it.score.leanConfidence ?? null,
     leanClauseQuote: it.score.leanClauseQuote ?? null,
     leanCrowdConsistent: it.score.leanCrowdConsistent ?? null,
+    verdict: it.score.verdict ?? null,
     market: {
       platform: it.platform,
       question: it.question,
@@ -504,7 +507,13 @@ export function Dashboard() {
                     )}
                   </div>
                   <div className="mt-0.5 truncate text-[0.95rem] font-medium text-fg">{it.question}</div>
-                  <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">{it.score.headlineRisk}</div>
+                  {it.score.verdict ? (
+                    <div className="mt-1 flex min-w-0">
+                      <VerdictLine v={it.score.verdict} compact />
+                    </div>
+                  ) : (
+                    <div className="mt-0.5 line-clamp-1 text-[0.82rem] text-muted">{it.score.headlineRisk}</div>
+                  )}
                 </div>
                 {it.history.length >= 3 && (
                   <div className="hidden md:block">

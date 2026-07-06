@@ -13,6 +13,7 @@
     "ingest": "tsx src/cache/ingest-cli.ts",
     "backfill": "tsx src/cache/backfill-cli.ts",
     "enrich": "tsx src/cache/enrich-lean-cli.ts",
+    "verdicts": "tsx src/cache/verdicts-cli.ts",
     "alerts": "tsx src/cache/alerts-cli.ts",
     "snapshot": "tsx src/track/snapshot-cli.ts",
     "settle": "tsx src/track/settle-cli.ts",

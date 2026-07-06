@@ -91,7 +91,14 @@ function Stat({ label, children, foot }: { label: string; children: ReactNode; f
     <div className="glass rounded-2xl p-5">
       <div className="label">{label}</div>
       <div className="mt-2">{children}</div>
-      {foot && <div className="mono mt-3 text-[0.7rem] leading-relaxed text-faint">{foot}</div>}
+      {foot && (
+        <details className="group mt-3">
+          <summary className="mono cursor-pointer list-none text-[0.68rem] text-faint transition-colors hover:text-muted">
+            methodology ▾
+          </summary>
+          <div className="mono mt-1.5 text-[0.7rem] leading-relaxed text-faint">{foot}</div>
+        </details>
+      )}
     </div>
   )
 }

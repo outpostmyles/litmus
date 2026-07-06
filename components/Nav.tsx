@@ -39,7 +39,7 @@ export function LitmusMark({ size = 30 }: { size?: number }) {
 export function Nav() {
   const path = usePathname()
   return (
-    <header className="glass-strong sticky top-0 z-40 border-b border-line">
+    <header className="sticky top-0 z-40 border-b border-line bg-[#0b0e14]/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
         <Link href="/" className="group flex items-center gap-3">
           <span className="transition-transform duration-500 group-hover:rotate-[8deg]">

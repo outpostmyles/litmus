@@ -3,6 +3,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { getConfig } from '../lib/env'
 import { recordUsage } from '../lib/spend'
 import { ScoreSchema, type MarketInput, type RawScore } from './types'
+import { gateVerdict, type Verdict } from './verdict'
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt'
 import {
   DIMENSIONS,
@@ -31,6 +32,8 @@ export interface LitmusScore {
   assumedVsActual: string | null
   headlineRisk: string
   summary: string
+  /** The 3-second layer, code-gated: killer_clause verified verbatim or lean=UNCLEAR. */
+  verdict: Verdict
   model: string
   usage: { inputTokens: number; outputTokens: number }
   raw: RawScore
@@ -104,6 +107,7 @@ export async function scoreMarket(market: MarketInput, opts: ScoreOptions = {}):
     assumedVsActual: parsed.assumed_vs_actual,
     headlineRisk: parsed.headline_risk,
     summary: parsed.summary,
+    verdict: gateVerdict(parsed.verdict, [market.resolutionText]),
     model: response.model,
     usage: {
       inputTokens: response.usage.input_tokens,

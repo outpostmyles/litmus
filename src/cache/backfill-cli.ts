@@ -73,6 +73,7 @@ async function main(): Promise<void> {
           model: s.model,
           scoredAt: new Date().toISOString(),
           scanLane: 'daily',
+          verdict: s.verdict,
         } satisfies CachedScore
         saveScores(scores) // incremental → resumable if interrupted
         done++
