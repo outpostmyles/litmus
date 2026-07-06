@@ -32,6 +32,10 @@ export function GET() {
         scenario: p.divergence!.scenario_that_splits,
         scenarioYesVenue: p.divergence!.scenario_yes_venue,
         splitsIfShort: p.divergence!.splits_if_short ?? null,
+        legPairs: (p.legPairs ?? [])
+          .slice()
+          .sort((a, b) => (b.gap ?? -1) - (a.gap ?? -1))
+          .slice(0, 20),
         summary: p.divergence!.summary,
         items: p.divergence!.items,
         kalshi: k

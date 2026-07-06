@@ -9,6 +9,8 @@ import { generateCandidates, type CandidateMarket } from '../engine/crossvenue/c
 import { confirmMatch, type MarketBrief } from '../engine/crossvenue/matchConfirm'
 import { scoreDivergence } from '../engine/crossvenue/divergenceScore'
 import { baseDivergence, pairRisk } from '../engine/crossvenue/pairRisk'
+import { matchLegs, type Leg } from '../engine/crossvenue/legs'
+import { tryGetJson } from '../lib/http'
 import { loadTrack } from '../track/store'
 import { loadPairTrack, savePairTrack, gradePairs } from '../track/pairs'
 
@@ -217,11 +219,150 @@ async function main(): Promise<void> {
     locked++
   }
 
+  // 4b. LEG-LEVEL matching — what makes fan-out families gradeable. Deterministic
+  // and free: Kalshi legs come from the catalog; Polymarket siblings are fetched
+  // once per family (the venue's grouped event). Exact-label legs are the same
+  // claim on both venues and lock as same-event 1×1 pairs.
+  const GAMMA = process.env.POLYMARKET_GAMMA_URL || 'https://gamma-api.polymarket.com'
+  const polyLegCache = new Map<string, Leg[]>()
+  async function polyLegsFor(polyMarketId: string): Promise<Leg[]> {
+    if (polyLegCache.has(polyMarketId)) return polyLegCache.get(polyMarketId)!
+    let legs: Leg[] = []
+    const m = await tryGetJson(`${GAMMA}/markets/${encodeURIComponent(polyMarketId)}`)
+    const evSlug = m?.events?.[0]?.slug
+    if (evSlug) {
+      const ev = await tryGetJson(`${GAMMA}/events?slug=${encodeURIComponent(evSlug)}`)
+      const markets: any[] = (Array.isArray(ev) ? ev[0] : ev)?.markets ?? []
+      legs = markets
+        .map((x: any) => {
+          let priceYes: number | null = null
+          try {
+            const op = typeof x.outcomePrices === 'string' ? JSON.parse(x.outcomePrices) : x.outcomePrices
+            const p = Array.isArray(op) && op[0] != null ? Number(op[0]) : NaN
+            if (p > 0 && p < 1) priceYes = p
+          } catch {
+            /* none */
+          }
+          return {
+            marketId: String(x.id ?? ''),
+            label: String(x.groupItemTitle || x.question || ''),
+            priceYes,
+            volume: Number(x.volumeNum || 0),
+          }
+        })
+        .filter((l: Leg) => l.marketId && l.label)
+    } else if (m && m.groupItemTitle) {
+      // Ungrouped single market: usable as a leg ONLY when the venue gives it a real
+      // leg label. A full question is not a leg label — fuzzy-matching against
+      // question tokens manufactures junk pairs (a date strike ⊆ any question
+      // mentioning the date).
+      let priceYes: number | null = null
+      try {
+        const op = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices
+        const p = Array.isArray(op) && op[0] != null ? Number(op[0]) : NaN
+        if (p > 0 && p < 1) priceYes = p
+      } catch {
+        /* none */
+      }
+      legs = [
+        {
+          marketId: String(m.id ?? polyMarketId),
+          label: String(m.groupItemTitle),
+          priceYes,
+          volume: Number(m.volumeNum || 0),
+        },
+      ]
+    }
+    polyLegCache.set(polyMarketId, legs)
+    return legs
+  }
+
+  let legPairsTotal = 0
+  let legLocked = 0
+  for (const p of Object.values(pairs)) {
+    if (!p.active || !p.divergence || !p.match) continue
+    if (p.match.same_event !== 'yes' && p.match.same_event !== 'partial') continue
+    const k = byHash.get(p.kalshiHash)
+    const m = byHash.get(p.polyHash)
+    if (!k?.legs?.length || !m) continue // leg matching needs a Kalshi fan-out side
+    try {
+      // Stored family legs first (built at ingest/worldcup time); API fetch only as
+      // fallback for markets whose event grouping we never captured.
+      const pLegs: Leg[] = m.legs?.length ? m.legs.map((l) => ({ ...l })) : await polyLegsFor(m.marketId)
+      if (!pLegs.length) {
+        // No matchable legs under current rules: clear any STALE matches so the
+        // prune below can disown locks the matcher no longer stands behind.
+        if (p.legPairs?.length) {
+          p.legPairs = []
+          savePairs(pairs)
+        }
+        continue
+      }
+      const kLegs: Leg[] = k.legs.map((l) => ({ ...l }))
+      const matched = matchLegs(kLegs, pLegs)
+      p.legPairs = matched.map((x) => ({
+        label: x.label,
+        quality: x.quality,
+        kalshi: { marketId: x.kalshi.marketId, label: x.kalshi.label, priceYes: x.kalshi.priceYes },
+        poly: { marketId: x.poly.marketId, label: x.poly.label, priceYes: x.poly.priceYes },
+        gap:
+          x.kalshi.priceYes != null && x.poly.priceYes != null ? Math.abs(x.kalshi.priceYes - x.poly.priceYes) : null,
+        matchedAt: new Date().toISOString(),
+      }))
+      legPairsTotal += matched.length
+      savePairs(pairs)
+
+      // Lock each matched leg as its own gradeable ledger entry (1×1 by construction).
+      // Exact-label legs are the same claim → sameEvent 'yes'; fuzzy stays 'partial'.
+      if (!stillOpen(k) || !stillOpen(m) || !fresh(k) || !fresh(m)) continue
+      const base = baseDivergence(p.divergence)
+      for (const x of matched) {
+        const legKey = `${p.pairKey}#${x.label}`
+        if (pairTrack[legKey]) continue
+        pairTrack[legKey] = {
+          pairKey: legKey,
+          lockedAt: new Date().toISOString(),
+          kalshi: { platform: 'Kalshi', hash: p.kalshiHash, marketId: x.kalshi.marketId, question: `${k.question} — ${x.kalshi.label}`, closeDate: k.closeDate, priceYesAtLock: x.kalshi.priceYes, marketCount: 1 },
+          poly: { platform: 'Polymarket', hash: p.polyHash, marketId: x.poly.marketId, question: x.poly.label, closeDate: m.closeDate, priceYesAtLock: x.poly.priceYes, marketCount: 1 },
+          sameEvent: x.quality === 'exact' ? 'yes' : 'partial',
+          divergenceBase: base,
+          gapAtLock:
+            x.kalshi.priceYes != null && x.poly.priceYes != null
+              ? Math.abs(x.kalshi.priceYes - x.poly.priceYes)
+              : null,
+          scenarioThatSplits: p.divergence.scenario_that_splits,
+          leg: { label: x.label, quality: x.quality, parentPairKey: p.pairKey },
+          settled: false,
+        }
+        legLocked++
+      }
+    } catch {
+      /* leg matching is best-effort; the family pair stands either way */
+    }
+  }
+  // Prune UNSETTLED leg locks the current (stricter) matcher no longer produces —
+  // a lock the matcher has disowned could never be graded honestly. Settled legs
+  // are history and are never touched.
+  let legPruned = 0
+  for (const [key, entry] of Object.entries(pairTrack)) {
+    if (!entry.leg || entry.settled) continue
+    const parent = pairs[entry.leg.parentPairKey]
+    const stillMatched = parent?.legPairs?.some((x) => x.label === entry.leg!.label)
+    if (!stillMatched) {
+      delete pairTrack[key]
+      legPruned++
+    }
+  }
+  if (legPairsTotal || legPruned) {
+    console.log(`  Legs: ${legPairsTotal} matched across families, ${legLocked} newly locked${legPruned ? `, ${legPruned} disowned locks pruned` : ''}.`)
+  }
+
   // Reconciliation: when a later re-confirmation supersedes a locked same-event
   // verdict, ANNOTATE the ledger entry (never edit locked fields) so split
   // accounting excludes it and the disagreement is visible.
   let superseded = 0
   for (const entry of Object.values(pairTrack)) {
+    if (entry.leg) continue // leg sameEvent is label-quality-based, not the family verdict
     const current = pairs[entry.pairKey]?.match?.same_event
     if (current && current !== entry.sameEvent && !entry.verdictNow) {
       entry.verdictNow = current

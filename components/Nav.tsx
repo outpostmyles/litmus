@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/', label: 'Lookup' },
   { href: '/board', label: 'Board' },
   { href: '/pairs', label: 'Pairs' },
+  { href: '/worldcup', label: 'World Cup' },
   { href: '/track', label: 'Track' },
   { href: '/cases', label: 'Cases' },
   { href: '/guide', label: 'Guide' },

@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { loadTrack, type Track } from './store'
+import { resolveKalshi, resolvePolymarket, isInFlight } from './resolve'
 
 // Pair ledger: the cross-venue forward record. A pair is LOCKED while both legs are
 // still open — divergence score, both entry prices, and the gap are frozen at lock —
@@ -37,10 +38,18 @@ export interface PairLedgerEntry {
   divergenceBase: number
   gapAtLock: number | null
   scenarioThatSplits: string | null
+  /**
+   * Present on LEG entries: this pair is one matched leg (e.g. "France") of a
+   * fan-out family. Legs grade by resolving their own marketIds directly — they
+   * are 1×1 by construction. The divergence analysis is inherited from the family.
+   */
+  leg?: { label: string; quality: 'exact' | 'fuzzy'; parentPairKey: string }
   // --- reconciliation (additive annotations; locked fields above are never edited) ---
   /** Set when a later re-confirmation disagrees with the locked sameEvent verdict. */
   verdictNow?: 'yes' | 'partial' | 'no'
   verdictSupersededAt?: string
+  /** In-flight dispute evidence observed on either venue before finality. */
+  disputeSeen?: string
   // --- grading (filled when BOTH legs settle) ---
   settled: boolean
   settledAt?: string
@@ -86,6 +95,7 @@ export function gradePairs(pairTrack: PairTrack, track: Track = loadTrack()): { 
   let splits = 0
   for (const p of Object.values(pairTrack)) {
     if (p.settled) continue
+    if (p.leg) continue // leg entries grade by direct market resolution — see gradeLegPairs
     const k = track[p.kalshi.hash]
     const m = track[p.poly.hash]
     if (!k?.settled || !m?.settled || !k.outcome || !m.outcome) continue
@@ -108,6 +118,46 @@ export function gradePairs(pairTrack: PairTrack, track: Track = loadTrack()): { 
     } else {
       // Opposite outcomes on a partial (or verdict-superseded) pair are the expected
       // consequence of asking different questions — a trap caught, not a receipt.
+      p.settlement = 'divergent-partial'
+    }
+    graded++
+  }
+  return { graded, splits }
+}
+
+/**
+ * Grade LEG entries by resolving their own marketIds directly (both venues' shared
+ * resolvers, provenance included). Free read-only API calls; conservative like the
+ * main settle: nothing grades until both venues say FINAL. In-flight disputes are
+ * recorded as evidence. Same split semantics: exact-label legs are same-event.
+ */
+export async function gradeLegPairs(pairTrack: PairTrack): Promise<{ graded: number; splits: number }> {
+  let graded = 0
+  let splits = 0
+  const pending = Object.values(pairTrack).filter((p) => p.leg && !p.settled)
+  for (const p of pending) {
+    const [k, m] = await Promise.all([resolveKalshi(p.kalshi.marketId), resolvePolymarket(p.poly.marketId)])
+    if (isInFlight(k) || isInFlight(m)) {
+      if (!p.disputeSeen) {
+        const notes = [isInFlight(k) ? `kalshi:${k.note}` : '', isInFlight(m) ? `poly:${m.note}` : ''].filter(Boolean)
+        p.disputeSeen = `${notes.join(' ')} ${new Date().toISOString().slice(0, 10)}`
+      }
+      continue
+    }
+    if (!k || !m) continue // at least one leg not final yet
+    p.settled = true
+    p.settledAt = new Date().toISOString()
+    p.kalshiOutcome = k.outcome
+    p.polyOutcome = m.outcome
+    p.kalshiResolvedVia = k.via
+    p.polyResolvedVia = m.via
+    const comparable = (o: string) => o === 'yes' || o === 'no'
+    if (!comparable(k.outcome) || !comparable(m.outcome)) p.settlement = 'non-comparable'
+    else if (k.outcome === m.outcome) p.settlement = 'identical'
+    else if (p.sameEvent === 'yes' && !p.verdictNow) {
+      p.settlement = 'split'
+      splits++
+    } else {
       p.settlement = 'divergent-partial'
     }
     graded++

@@ -51,6 +51,12 @@ export interface CatalogEntry {
   scanLane?: 'daily' | 'fast'
   /** When the fast-scan watcher first saw the market listed. */
   detectedAt?: string
+  /**
+   * Individual legs of a fan-out family (candidates/teams/strikes sharing this
+   * rulebook). Present when marketCount > 1 — what makes leg-level cross-venue
+   * matching and honest pair grading possible.
+   */
+  legs?: { marketId: string; label: string; priceYes: number | null; volume: number }[]
 }
 
 export interface CachedScore {

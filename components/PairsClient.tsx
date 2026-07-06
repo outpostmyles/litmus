@@ -28,6 +28,13 @@ interface PairRow {
   scenario: string | null
   scenarioYesVenue: 'kalshi' | 'polymarket' | null
   splitsIfShort: string | null
+  legPairs: {
+    label: string
+    quality: 'exact' | 'fuzzy'
+    kalshi: { marketId: string; label: string; priceYes: number | null }
+    poly: { marketId: string; label: string; priceYes: number | null }
+    gap: number | null
+  }[]
   summary: string
   items: DivergenceItem[]
   kalshi: Leg | null
@@ -229,6 +236,29 @@ export function PairsClient() {
                     </div>
                   )}
                   <p className="max-w-3xl text-[0.9rem] leading-relaxed text-fg/90">{r.summary}</p>
+
+                  {/* Matched legs: the same claim on both venues, side by side. */}
+                  {r.legPairs.length > 0 && (
+                    <div className="rounded-xl border border-line bg-black/20 px-4 py-3">
+                      <div className="mono mb-2 text-[0.66rem] uppercase tracking-wider text-faint">
+                        matched legs ({r.legPairs.length}) — same claim, both venues
+                      </div>
+                      <div className="space-y-1">
+                        {r.legPairs.map((l) => (
+                          <div key={l.label} className="mono flex items-baseline gap-3 text-[0.78rem]">
+                            <span className="w-40 shrink-0 truncate text-fg capitalize">{l.kalshi.label}</span>
+                            <span className="text-muted">K {cents(l.kalshi.priceYes)}</span>
+                            <span className="text-muted">P {cents(l.poly.priceYes)}</span>
+                            <span className={l.gap != null && l.gap >= 0.05 ? 'text-amber-300' : 'text-faint'}>
+                              gap {l.gap != null ? Math.round(l.gap * 100) + '¢' : '—'}
+                            </span>
+                            {l.quality === 'fuzzy' && <span className="text-faint">~fuzzy</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Severity items: one-line rows expanding to the dual verbatim quotes. */}
                   {r.items.map((it, i) => (
                     <details key={i} className="group rounded-xl border border-line bg-black/20 px-4 py-3">

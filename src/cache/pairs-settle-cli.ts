@@ -1,11 +1,12 @@
-import { loadPairTrack, savePairTrack, gradePairs } from '../track/pairs'
+import { loadPairTrack, savePairTrack, gradePairs, gradeLegPairs } from '../track/pairs'
 import { acquireRunLock } from '../lib/runlock'
 import { CROSSVENUE_LOCK } from './pairs-store'
 
-// Free daily step: grade pair-ledger entries whose legs have both settled (the main
-// settle stage records leg outcomes with provenance; this just compares them).
-// Zero model calls — safe for the unattended daily job.
-function main(): void {
+// Free daily step: grade pair-ledger entries when both venues are final. Family
+// entries compare outcomes already recorded (with provenance) by the main settle
+// stage; LEG entries resolve their own marketIds directly through the same shared
+// resolvers. Zero model calls — safe for the unattended daily job.
+async function main(): Promise<void> {
   if (!acquireRunLock(CROSSVENUE_LOCK)) {
     console.log('\n  A crossvenue run is in progress — skipping pairs-settle this cycle.\n')
     return
@@ -16,7 +17,10 @@ function main(): void {
     console.log('\n  No locked pairs yet — run npm run crossvenue after enrich.\n')
     return
   }
-  const { graded, splits } = gradePairs(pairTrack)
+  const fam = gradePairs(pairTrack)
+  const legs = await gradeLegPairs(pairTrack)
+  const graded = fam.graded + legs.graded
+  const splits = fam.splits + legs.splits
   savePairTrack(pairTrack)
   const settled = Object.values(pairTrack).filter((p) => p.settled)
   const splitAll = settled.filter((p) => p.settlement === 'split')
@@ -42,4 +46,7 @@ function main(): void {
   console.log('')
 }
 
-main()
+main().catch((e) => {
+  console.error(e instanceof Error ? e.message : e)
+  process.exit(1)
+})

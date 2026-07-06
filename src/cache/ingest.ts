@@ -96,6 +96,23 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
   for (const q of qualifying) {
     try {
       const mi = await fetchKalshiMarket(q.rep.ticker)
+      // Fan-out legs: every market of the event, labeled by its yes_sub_title —
+      // the raw material for leg-level cross-venue matching.
+      const ms: any[] = q.event.markets || []
+      const legs =
+        ms.length > 1
+          ? ms
+              .map((m: any) => ({
+                marketId: String(m.ticker || ''),
+                label: String(m.yes_sub_title || m.title || ''),
+                priceYes:
+                  Number(m.last_price_dollars) > 0 && Number(m.last_price_dollars) < 1
+                    ? Number(m.last_price_dollars)
+                    : null,
+                volume: Number(m.volume_fp || 0),
+              }))
+              .filter((l) => l.marketId && l.label)
+          : undefined
       out.push({
         platform: 'Kalshi',
         // The representative market ticker (resolvable via GET /markets/{ticker}); event ticker is the fallback.
@@ -118,6 +135,7 @@ export async function ingestKalshi(minContracts: number, max: number): Promise<C
         // Series landing page — the canonical public URL for an event's markets.
         url: q.event.series_ticker ? `https://kalshi.com/markets/${String(q.event.series_ticker).toLowerCase()}` : null,
         fetchedAt: new Date().toISOString(),
+        legs,
       })
     } catch {
       /* skip markets whose rules text is empty / unavailable */

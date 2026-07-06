@@ -25,6 +25,19 @@ export interface PairRecord {
   match?: MatchResult & { model: string; checkedAt: string }
   /** Stage 3 (cached LLM): rule divergence. Only for same_event yes/partial. */
   divergence?: DivergenceResult & { model: string; scoredAt: string }
+  /**
+   * Leg-level matches within this family (deterministic, free, refreshed each run):
+   * "France wins" on Kalshi ↔ "France wins" on Polymarket. What makes the pair
+   * GRADEABLE — family representatives are arbitrary; legs are the same claim.
+   */
+  legPairs?: {
+    label: string
+    quality: 'exact' | 'fuzzy'
+    kalshi: { marketId: string; label: string; priceYes: number | null }
+    poly: { marketId: string; label: string; priceYes: number | null }
+    gap: number | null
+    matchedAt: string
+  }[]
   /** True while both rulebooks are present in the current catalog. */
   active: boolean
 }
