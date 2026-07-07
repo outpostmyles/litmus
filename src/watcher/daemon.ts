@@ -47,14 +47,21 @@ async function pollCycle(state: WatcherState): Promise<void> {
     }),
   ])
 
-  // Bootstrap: first ever run marks everything as known — no announcements.
+  // Bootstrap: first ever run marks everything as known — no announcements. Only
+  // COMPLETE bootstrap when BOTH venues responded; otherwise a failed first poll
+  // would commit an empty known-set and the next success would flood the entire
+  // universe as "new". Seed each venue that succeeded and retry the other next cycle.
   if (!state.bootstrappedAt) {
-    state.knownIds.kalshi = kalshi ? kalshi.map((k) => k.eventTicker) : []
-    state.knownIds.polymarket = poly ? poly.map((p) => p.id) : []
-    state.bootstrappedAt = new Date().toISOString()
-    state.lastPollAt = state.bootstrappedAt
+    if (kalshi) state.knownIds.kalshi = kalshi.map((k) => k.eventTicker)
+    if (poly) state.knownIds.polymarket = poly.map((p) => p.id)
+    if (kalshi && poly) {
+      state.bootstrappedAt = new Date().toISOString()
+      log('info', 'bootstrapped', { kalshi: state.knownIds.kalshi.length, polymarket: state.knownIds.polymarket.length })
+    } else {
+      log('warn', 'bootstrap_partial', { kalshiOk: !!kalshi, polyOk: !!poly, retrying: true })
+    }
+    state.lastPollAt = new Date().toISOString()
     saveWatcherState(state)
-    log('info', 'bootstrapped', { kalshi: state.knownIds.kalshi.length, polymarket: state.knownIds.polymarket.length })
     return
   }
 

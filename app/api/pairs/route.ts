@@ -12,6 +12,16 @@ export function GET() {
   const pairs = loadPairs()
   const ledger = loadPairTrack()
 
+  // Leg entries are keyed `${pairKey}#label`; index settled ones by their parent so
+  // fan-out families surface their per-leg grades (the family key has no ledger row).
+  const legSettlementsByParent = new Map<string, { label: string; settlement?: string; kalshi?: string; poly?: string }[]>()
+  for (const e of Object.values(ledger)) {
+    if (!e.leg || !e.settled) continue
+    const arr = legSettlementsByParent.get(e.leg.parentPairKey) ?? []
+    arr.push({ label: e.leg.label, settlement: e.settlement, kalshi: e.kalshiOutcome, poly: e.polyOutcome })
+    legSettlementsByParent.set(e.leg.parentPairKey, arr)
+  }
+
   // Only ACTIVE pairs render (both rulebooks in the current catalog) — counts and
   // rows come from the same set so the header never claims more than is shown.
   const rows = Object.values(pairs)
@@ -23,6 +33,8 @@ export function GET() {
       const mPrice = m?.priceYes ?? null
       const { risk, base, gap } = pairRisk(p.divergence!, kPrice, mPrice)
       const tracked = ledger[p.pairKey] ?? null
+      const legGrades = legSettlementsByParent.get(p.pairKey) ?? []
+      const legSplits = legGrades.filter((g) => g.settlement === 'split').length
       return {
         pairKey: p.pairKey,
         sameEvent: p.match!.same_event,
@@ -35,7 +47,14 @@ export function GET() {
         legPairs: (p.legPairs ?? [])
           .slice()
           .sort((a, b) => (b.gap ?? -1) - (a.gap ?? -1))
-          .slice(0, 20),
+          .slice(0, 20)
+          // Attach any settlement grade to each rendered leg.
+          .map((lp) => {
+            const g = legGrades.find((x) => x.label === lp.label)
+            return g ? { ...lp, settlement: g.settlement, outcomes: { kalshi: g.kalshi, poly: g.poly } } : lp
+          }),
+        legSettled: legGrades.length,
+        legSplits,
         summary: p.divergence!.summary,
         items: p.divergence!.items,
         kalshi: k
@@ -44,7 +63,8 @@ export function GET() {
         poly: m
           ? { question: m.question, priceYes: mPrice, closeDate: m.closeDate, url: m.url, marketId: m.marketId }
           : null,
-        settlement: tracked?.settled ? tracked.settlement : null,
+        // Row-level settlement: family entry if present, else derived from legs.
+        settlement: tracked?.settled ? tracked.settlement : legSplits > 0 ? 'split' : null,
         outcomes: tracked?.settled ? { kalshi: tracked.kalshiOutcome, poly: tracked.polyOutcome } : null,
       }
     })

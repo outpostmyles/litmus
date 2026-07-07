@@ -200,7 +200,11 @@ async function main(): Promise<void> {
     const k = byHash.get(p.kalshiHash)
     const m = byHash.get(p.polyHash)
     if (!k || !m || !stillOpen(k) || !stillOpen(m)) continue
-    if (k.marketCount > 1 || m.marketCount > 1) continue // fan-out groups are ungradeable
+    // Fan-out families are ungradeable at rulebook level — their leg pairs grade
+    // instead. Trust the legs array as much as marketCount, since a mislabeled
+    // marketCount (fast-lane bug window) must never mint a fabricated 1×1 "split".
+    const fanOut = (e: typeof k) => e.marketCount > 1 || (e.legs?.length ?? 0) > 1
+    if (fanOut(k) || fanOut(m)) continue
     if (!gradeable(k) || !gradeable(m)) continue
     if (!fresh(k) || !fresh(m)) continue
     const base = baseDivergence(p.divergence)
@@ -224,11 +228,15 @@ async function main(): Promise<void> {
   // once per family (the venue's grouped event). Exact-label legs are the same
   // claim on both venues and lock as same-event 1×1 pairs.
   const GAMMA = process.env.POLYMARKET_GAMMA_URL || 'https://gamma-api.polymarket.com'
+  // Returns Leg[] on a definitive answer (possibly empty), or NULL when the fetch
+  // failed — the caller must treat null as "unknown, leave existing matches/locks
+  // alone", never as "no legs" (which would clear paid matches and prune leg locks).
   const polyLegCache = new Map<string, Leg[]>()
-  async function polyLegsFor(polyMarketId: string): Promise<Leg[]> {
+  async function polyLegsFor(polyMarketId: string): Promise<Leg[] | null> {
     if (polyLegCache.has(polyMarketId)) return polyLegCache.get(polyMarketId)!
     let legs: Leg[] = []
     const m = await tryGetJson(`${GAMMA}/markets/${encodeURIComponent(polyMarketId)}`)
+    if (!m) return null // fetch failed — do not clobber locked history on a transient error
     const evSlug = m?.events?.[0]?.slug
     if (evSlug) {
       const ev = await tryGetJson(`${GAMMA}/events?slug=${encodeURIComponent(evSlug)}`)
@@ -288,9 +296,10 @@ async function main(): Promise<void> {
     try {
       // Stored family legs first (built at ingest/worldcup time); API fetch only as
       // fallback for markets whose event grouping we never captured.
-      const pLegs: Leg[] = m.legs?.length ? m.legs.map((l) => ({ ...l })) : await polyLegsFor(m.marketId)
+      const pLegs: Leg[] | null = m.legs?.length ? m.legs.map((l) => ({ ...l })) : await polyLegsFor(m.marketId)
+      if (pLegs === null) continue // transient fetch failure — never touch existing matches/locks
       if (!pLegs.length) {
-        // No matchable legs under current rules: clear any STALE matches so the
+        // Venue AFFIRMATIVELY returned no matchable legs: clear stale matches so the
         // prune below can disown locks the matcher no longer stands behind.
         if (p.legPairs?.length) {
           p.legPairs = []

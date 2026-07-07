@@ -242,6 +242,19 @@ export const GLOSSARY = {
   act: 'How tradeable an edge is: price dislocation × time to close × resolution risk.',
 } as const
 
+/** Compact number: 1.3B / 33.0M / 540K / 42. */
+export function compactNum(n: number): string {
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B'
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M'
+  if (n >= 1e3) return Math.round(n / 1e3) + 'K'
+  return String(Math.round(n))
+}
+
+/** Platform-aware volume: Polymarket is USD, Kalshi is contracts. */
+export function fmtVolume(platform: string, v: number): string {
+  return platform === 'Polymarket' ? '$' + compactNum(v) : compactNum(v) + ' ct'
+}
+
 export const BAND_BLURB: Record<RiskBand, string> = {
   low: 'Resolves the way traders expect.',
   moderate: 'A pedant could quibble; unlikely to bite.',

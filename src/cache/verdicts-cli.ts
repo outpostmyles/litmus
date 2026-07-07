@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   const todo = Object.entries(scores).filter(([, s]) => force || !s.verdict)
   // Sides phase: verdicts that predate the per-side layer (P11) get a lighter pass.
   const sidesTodo = Object.entries(scores).filter(
-    ([, s]) => s.verdict && (force || s.verdict.yes_holder === undefined),
+    ([, s]) => s.verdict && (force || s.verdict.yes_holder == null),
   )
   const pairs = loadPairs()
   const pairTodo = Object.values(pairs).filter(
@@ -100,7 +100,11 @@ async function main(): Promise<void> {
         // Gate against the rules text when we still have it, else the stored clauses.
         const sources = [rulesByHash.get(hash), ...clauses]
         const gated = gateVerdict(VerdictSchema.parse(res.parsed_output), sources)
-        s.verdict = gated
+        // The main verdict prompt says nothing about sides — any side fields here are
+        // uninstructed. Strip them so the dedicated, properly-prompted sides phase
+        // fills them (its filter picks up `yes_holder == null`).
+        const { yes_holder: _y, no_holder: _n, holder_note: _h, ...verdictNoSides } = gated
+        s.verdict = { ...verdictNoSides, yes_holder: null, no_holder: null }
         scores[hash] = s
         saveScores(scores)
         done++

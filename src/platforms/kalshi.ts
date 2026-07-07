@@ -65,6 +65,10 @@ export async function fetchKalshiMarket(input: string): Promise<MarketInput> {
     volume: market.volume_fp != null ? Number(market.volume_fp) : null,
     liquidity: null, // liquidity_dollars is deprecated on Kalshi and always 0
     url: seriesTicker ? `https://kalshi.com/markets/${seriesTicker.toLowerCase()}` : null,
+    priceYes:
+      Number(market.last_price_dollars) > 0 && Number(market.last_price_dollars) < 1
+        ? Number(market.last_price_dollars)
+        : null,
   }
 }
 

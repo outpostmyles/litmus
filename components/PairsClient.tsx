@@ -34,7 +34,11 @@ interface PairRow {
     kalshi: { marketId: string; label: string; priceYes: number | null }
     poly: { marketId: string; label: string; priceYes: number | null }
     gap: number | null
+    settlement?: 'identical' | 'split' | 'divergent-partial' | 'non-comparable'
+    outcomes?: { kalshi?: string; poly?: string }
   }[]
+  legSettled?: number
+  legSplits?: number
   summary: string
   items: DivergenceItem[]
   kalshi: Leg | null
@@ -252,6 +256,12 @@ export function PairsClient() {
                     <div className="rounded-xl border border-line bg-black/20 px-4 py-3">
                       <div className="mono mb-2 text-[0.66rem] uppercase tracking-wider text-faint">
                         matched legs ({r.legPairs.length}) — same claim, both venues
+                        {r.legSettled ? ` · ${r.legSettled} settled` : ''}
+                        {r.legSplits ? (
+                          <span className="text-rose-300"> · {r.legSplits} SPLIT</span>
+                        ) : (
+                          ''
+                        )}
                       </div>
                       <div className="space-y-1">
                         {r.legPairs.map((l) => (
@@ -263,6 +273,13 @@ export function PairsClient() {
                               gap {l.gap != null ? Math.round(l.gap * 100) + '¢' : '—'}
                             </span>
                             {l.quality === 'fuzzy' && <span className="text-faint">~fuzzy</span>}
+                            {l.settlement === 'split' && (
+                              <span className="rounded bg-rose-400/15 px-1 text-rose-300">SPLIT</span>
+                            )}
+                            {l.settlement === 'identical' && <span className="text-faint">settled same</span>}
+                            {(l.settlement === 'divergent-partial' || l.settlement === 'non-comparable') && (
+                              <span className="text-faint">settled</span>
+                            )}
                           </div>
                         ))}
                       </div>

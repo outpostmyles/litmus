@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
 
@@ -14,16 +14,28 @@ export function rulebookHash(platform: string, resolutionText: string): string {
 }
 
 function readJson<T>(path: string, fallback: T): T {
+  if (!existsSync(path)) return fallback
+  // A corrupt PAID cache must fail loudly, never silently reset to empty — a torn
+  // read followed by any write would otherwise wipe every scored rulebook. Quarantine
+  // the bad file so the failure is diagnosable, then throw.
   try {
     return JSON.parse(readFileSync(path, 'utf8')) as T
-  } catch {
-    return fallback
+  } catch (err) {
+    try {
+      renameSync(path, `${path}.corrupt`)
+    } catch {
+      /* best effort */
+    }
+    throw new Error(`Corrupt cache at ${path} (moved to ${path}.corrupt): ${err instanceof Error ? err.message : err}`)
   }
 }
 
 function writeJson(path: string, data: unknown): void {
   mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(path, JSON.stringify(data, null, 2))
+  // Atomic write: a crash or concurrent reader must never see a truncated cache.
+  const tmp = `${path}.tmp`
+  writeFileSync(tmp, JSON.stringify(data, null, 2))
+  renameSync(tmp, path)
 }
 
 export interface CatalogEntry {

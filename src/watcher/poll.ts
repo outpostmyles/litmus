@@ -13,6 +13,8 @@ export interface KalshiListing {
   category: string
   repTicker: string | null
   seriesTicker: string | null
+  /** Number of markets under the event — >1 means a fan-out family (fan-out guard). */
+  marketCount: number
 }
 
 export interface PolyListing {
@@ -36,6 +38,7 @@ export async function pollKalshi(pages = Number(process.env.WATCHER_KALSHI_PAGES
         category: e.category || 'Other',
         repTicker: rep?.ticker ?? null,
         seriesTicker: e.series_ticker ?? null,
+        marketCount: ms.length,
       })
     }
     cursor = j.cursor || ''

@@ -39,8 +39,11 @@ export async function POST(req: Request) {
     }
 
     const score = await scoreMarket(market)
+    // Strip `raw` — the pre-gate model output. The gated verdict is the product's
+    // quality contract; the ungated lean/killer_clause must never reach the browser.
+    const { raw: _raw, ...safe } = score
     return NextResponse.json({
-      ...score,
+      ...safe,
       market: {
         platform: market.platform,
         question: market.question,
@@ -50,6 +53,7 @@ export async function POST(req: Request) {
         closeDate: market.closeDate ?? null,
         outcomes: market.outcomes ?? ['Yes', 'No'],
         url: market.url ?? null,
+        priceYes: market.priceYes ?? null,
       },
     })
   } catch (err) {

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 
 // Local track-record store. Each entry locks a PREDICTION at first sight (snapshot)
@@ -46,15 +46,25 @@ export interface TrackEntry {
 export type Track = Record<string, TrackEntry>
 
 function read(): Track {
+  if (!existsSync(TRACK_PATH)) return {}
+  // The forward ledger is sacred — a corrupt read must fail loudly, not silently
+  // reset to {} and let the next write erase the whole track record.
   try {
     return JSON.parse(readFileSync(TRACK_PATH, 'utf8')) as Track
-  } catch {
-    return {}
+  } catch (err) {
+    try {
+      renameSync(TRACK_PATH, `${TRACK_PATH}.corrupt`)
+    } catch {
+      /* best effort */
+    }
+    throw new Error(`Corrupt track ledger at ${TRACK_PATH} (moved to .corrupt): ${err instanceof Error ? err.message : err}`)
   }
 }
 function write(t: Track): void {
   mkdirSync(dirname(TRACK_PATH), { recursive: true })
-  writeFileSync(TRACK_PATH, JSON.stringify(t, null, 2))
+  const tmp = `${TRACK_PATH}.tmp`
+  writeFileSync(tmp, JSON.stringify(t, null, 2))
+  renameSync(tmp, TRACK_PATH)
 }
 export function loadTrack(): Track {
   return read()

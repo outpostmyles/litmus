@@ -293,7 +293,7 @@ export function Dashboard() {
       return b.score.combined - a.score.combined
     })
     return out
-  }, [items, platform, category, band, query, sort, edgesOnly, watchOnly, watched])
+  }, [items, platform, category, band, query, sort, edgesOnly, watchOnly, newOnly, watched])
 
   const hasAlerts = alerts.closingSoon.length > 0 || alerts.changed.length > 0
 

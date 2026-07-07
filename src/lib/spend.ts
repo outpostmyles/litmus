@@ -10,8 +10,11 @@ export const SPEND_PATH = 'data/cache/spend.json'
 
 /** Hard daily cap in USD. Scoring stops here; free stages are never affected. */
 export function dailyBudgetUsd(): number {
-  const v = Number(process.env.LITMUS_DAILY_BUDGET_USD || '10')
-  return Number.isFinite(v) && v > 0 ? v : 10
+  const raw = process.env.LITMUS_DAILY_BUDGET_USD
+  if (raw == null || raw === '') return 10
+  const v = Number(raw)
+  // 0 is a valid hard stop ("spend nothing today"); only invalid/negative → default 10.
+  return Number.isFinite(v) && v >= 0 ? v : 10
 }
 
 /** $/1M tokens by model family: [input, output]. Cache reads bill ~10% of input. */

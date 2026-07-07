@@ -114,7 +114,9 @@ export function YourTrade({ v, priceYes }: { v: VerdictData; priceYes?: number |
       <div className="mono mb-2 flex items-center gap-2 text-[0.66rem] uppercase tracking-wider text-faint">
         <span title="Risk is directional: the same trap that endangers one side often helps the other.">your trade</span>
         <span className="flex gap-1">
-          {(['YES', 'NO'] as const).map((sd) => (
+          {(['YES', 'NO'] as const)
+            .filter((sd) => (sd === 'YES' ? v.yes_holder : v.no_holder))
+            .map((sd) => (
             <button
               key={sd}
               onClick={() => setSide(side === sd ? null : sd)}

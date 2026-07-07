@@ -74,9 +74,11 @@ async function kalshiToCatalogEntry(l: KalshiListing, detectedAt: string): Promi
     outcomes: mi.outcomes ?? ['Yes', 'No'],
     closeDate: mi.closeDate ?? null,
     volume: mi.volume ?? 0,
-    marketCount: 1,
+    // Real fan-out size from the poll — a multi-market event must not masquerade as a
+    // 1×1 market, or the cross-venue fan-out guard would pass on a family.
+    marketCount: Math.max(1, l.marketCount || 1),
     totalVolume: mi.volume ?? 0,
-    priceYes: null, // fetchKalshiMarket carries no price; brand-new books rarely have one
+    priceYes: mi.priceYes ?? null,
     priceAsOf: null,
     url: mi.url ?? null,
     fetchedAt: new Date().toISOString(),

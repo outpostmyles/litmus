@@ -1,5 +1,5 @@
 import { loadCatalog, loadScores } from '@/src/cache/store'
-import { riskColor, liveRisk, BAND_LABEL, type RiskBand } from '@/lib/litmus'
+import { riskColor, liveRisk, fmtVolume, ageOf, BAND_LABEL, type RiskBand } from '@/lib/litmus'
 import { LeanChip, type VerdictData } from '@/components/Verdict'
 
 export const dynamic = 'force-dynamic'
@@ -45,6 +45,12 @@ export default function WorldCupPage() {
     .filter((r) => r.s)
     .sort((a, b) => (b.live ?? 0) - (a.live ?? 0))
 
+  const freshest = rows.reduce<string | null>((acc, r) => {
+    const p = r.e.priceAsOf
+    return p && (!acc || p > acc) ? p : acc
+  }, null)
+  const priceAge = ageOf(freshest)
+
   return (
     <div className="mx-auto max-w-4xl">
       <section className="pb-7 pt-4">
@@ -55,6 +61,7 @@ export default function WorldCupPage() {
           written rules can diverge from what the football says, weighted by whether the price leaves room for it to
           matter. The tournament is decided on the pitch; your payout is decided by the fine print.
         </p>
+        {priceAge && <p className="mono mt-2 text-xs text-faint">prices as of {priceAge}</p>}
       </section>
 
       {rows.length === 0 && (
@@ -84,7 +91,7 @@ export default function WorldCupPage() {
                   <div className="mono flex flex-wrap items-center gap-x-2.5 text-[0.62rem] uppercase tracking-wider text-faint">
                     <span>{e.platform}</span>
                     {e.marketCount > 1 && <span>{e.marketCount} legs</span>}
-                    <span>${Math.round(e.totalVolume / 1e6)}M</span>
+                    <span>{fmtVolume(e.platform, e.totalVolume)}</span>
                     {e.url && (
                       <a href={e.url} target="_blank" rel="noopener noreferrer" className="text-faint hover:text-brand">
                         open ↗

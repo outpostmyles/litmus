@@ -53,6 +53,16 @@ function polyFamilyEntry(ev: any): CatalogEntry | null {
   const rep = [...legs].sort((a, b) => b.volume - a.volume)[0]!
   if (!rep.description || rep.description.trim().length <= 40) return null
   const totalVolume = legs.reduce((s, l) => s + l.volume, 0)
+  // Close date = the LATEST leg deadline — the tournament, not one team's exit. A
+  // per-leg endDate would let look-ahead guards think the family already closed.
+  const closeDate =
+    legs
+      .map((l) => l.endDate)
+      .filter((d): d is string => !!d && Number.isFinite(Date.parse(d)))
+      .sort()
+      .pop() ??
+    rep.endDate ??
+    null
   return {
     platform: 'Polymarket',
     marketId: rep.marketId,
@@ -62,7 +72,7 @@ function polyFamilyEntry(ev: any): CatalogEntry | null {
     resolutionText: rep.description.trim(),
     resolutionSource: null,
     outcomes: ['Yes', 'No'],
-    closeDate: rep.endDate,
+    closeDate,
     volume: totalVolume,
     marketCount: legs.length,
     totalVolume,
@@ -99,12 +109,21 @@ async function main(): Promise<void> {
       existing.question = entry.question
       existing.url = entry.url ?? existing.url
       existing.legs = entry.legs
+      // Adopt the rep the fresh price belongs to (the old rep leg may have closed) —
+      // marketId/closeDate/priceYes must stay a consistent set, else a future lock
+      // would freeze one market's price and grade a different market.
+      existing.marketId = entry.marketId
+      existing.closeDate = entry.closeDate
       existing.priceYes = entry.priceYes
       existing.priceAsOf = entry.priceAsOf
       existing.category = 'World Cup'
       existing.marketCount = entry.marketCount
       existing.totalVolume = entry.totalVolume
       existing.volume = entry.volume
+      // Preserve the targeted-keep provenance so the daily sweep can't evict it and
+      // strip its legs/category mid-tournament.
+      existing.scanLane = 'fast'
+      existing.detectedAt = existing.detectedAt ?? entry.detectedAt
       refreshed++
     } else {
       catalog.push(entry)
@@ -140,6 +159,13 @@ async function main(): Promise<void> {
         if (existing) {
           existing.legs = legs.length > 1 ? legs : existing.legs
           existing.category = 'World Cup'
+          // Keep marketCount/volume in sync with the attached legs so the fan-out
+          // guard sees a family, not a phantom 1×1 pair.
+          existing.marketCount = Math.max(existing.marketCount, ms.length)
+          existing.totalVolume = totalVol
+          existing.volume = totalVol
+          existing.scanLane = 'fast'
+          existing.detectedAt = existing.detectedAt ?? new Date().toISOString()
           refreshed++
         } else {
           const entry: CatalogEntry = {

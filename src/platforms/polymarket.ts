@@ -26,6 +26,14 @@ function toMarketInput(m: any): MarketInput {
   } catch {
     /* leave undefined */
   }
+  let priceYes: number | null = null
+  try {
+    const op = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices
+    const p = Array.isArray(op) && op[0] != null ? Number(op[0]) : NaN
+    if (p > 0 && p < 1) priceYes = p
+  } catch {
+    /* no price */
+  }
   const mi: MarketInput = {
     platform: 'Polymarket',
     marketId: String(m.id ?? m.conditionId ?? m.slug ?? ''),
@@ -38,6 +46,7 @@ function toMarketInput(m: any): MarketInput {
     volume: m.volumeNum != null ? Number(m.volumeNum) : m.volume != null ? Number(m.volume) : null,
     liquidity: m.liquidityNum != null ? Number(m.liquidityNum) : null,
     url: m.slug ? `https://polymarket.com/event/${m.slug}` : null,
+    priceYes,
   }
   if (!mi.resolutionText) throw new Error('Polymarket market has no description / resolution text.')
   return mi

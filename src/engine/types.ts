@@ -22,6 +22,8 @@ export interface MarketInput {
   liquidity?: number | null
   /** Public web page for the market, when known. Context only — never scored. */
   url?: string | null
+  /** Current implied Yes price (0–1) when the venue exposes one. Context, never scored. */
+  priceYes?: number | null
 }
 
 /** Loose parser for CLI / fixture input. Tolerant of missing optional fields. */
