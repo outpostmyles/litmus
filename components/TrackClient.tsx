@@ -37,6 +37,8 @@ interface Payload {
     winRate: number | null
     winRateCI: Interval | null
     enoughSample: boolean
+    byVersion: Record<string, { wins: number; losses: number; pushes: number; pnl: number }>
+    pendingByVersion: Record<string, number>
   }
   calibration: {
     tp: number
@@ -150,7 +152,7 @@ export function TrackClient() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat
           label="edge simulation"
-          foot="1-unit paper trade on each flagged edge, entered at the open-market price when flagged."
+          foot="1-unit paper trade on each flagged edge, entered at the open-market price when flagged. Calls are segmented by the rule that made them: v2 is the retired rule (it minted penny-longshot 'edges'), v3 requires a quotable clause and a price the crowd hasn't already read correctly. Locked calls are never rewritten, so the old rule's record stays visible rather than being quietly deleted."
         >
           {sim.decided > 0 ? (
             <div className="flex items-baseline justify-between">
@@ -173,6 +175,36 @@ export function TrackClient() {
                 {sim.decided}/{minSample} decided — win rate reported once the sample is real
               </div>
             ))}
+
+          {/* Segmented by the rule that made each call. A locked prediction is never
+              rewritten, so the old rule's calls stay in the record — but the fixed
+              rule must not be judged on them, and must not hide behind them. */}
+          {Object.keys(sim.byVersion).length > 0 && (
+            <div className="mono mt-3 space-y-1 border-t border-line pt-2 text-[0.68rem]">
+              {['3', '2'].map((v) => {
+                const s = sim.byVersion[v]
+                const pendingN = sim.pendingByVersion[v] ?? 0
+                if (!s && !pendingN) return null
+                const dec = s ? s.wins + s.losses : 0
+                const label = v === '3' ? 'v3 (current rule)' : 'v2 (retired rule)'
+                return (
+                  <div key={v} className="flex items-baseline justify-between gap-2">
+                    <span className={v === '3' ? 'text-fg' : 'text-faint'}>{label}</span>
+                    <span className={v === '3' ? 'text-muted' : 'text-faint'}>
+                      {dec > 0 ? (
+                        <>
+                          {s!.wins}–{s!.losses} · {signed(s!.pnl)}u
+                        </>
+                      ) : (
+                        'none settled'
+                      )}
+                      {pendingN > 0 && ` · ${pendingN} open`}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </Stat>
 
         <Stat

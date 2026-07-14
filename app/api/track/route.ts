@@ -41,7 +41,13 @@ export function GET() {
   const resolved = entries.filter((e) => e.settled)
   const pending = entries.filter((e) => !e.settled)
 
-  // Edge simulation (paper trades on the rules-favored side)
+  // Edge simulation (paper trades on the rules-favored side), SEGMENTED by the edge
+  // rule that made the call. Locked predictions are never rewritten, so the record
+  // still carries v2 calls made by the old rule (which minted penny lotteries the
+  // accuracy audit diagnosed). Reporting them together would judge the fixed rule on
+  // the broken rule's losses — and would also let a good v3 hide behind a bad v2.
+  const blank = () => ({ wins: 0, losses: 0, pushes: 0, pnl: 0 })
+  const byVersion: Record<string, ReturnType<typeof blank>> = {}
   let wins = 0
   let losses = 0
   let pushes = 0
@@ -49,10 +55,27 @@ export function GET() {
   for (const e of resolved) {
     const er = edgeResult(e)
     if (!er) continue
-    if (er.result === 'win') wins++
-    else if (er.result === 'loss') losses++
-    else pushes++
+    const v = String(e.edgeVersion ?? 2)
+    const bucket = (byVersion[v] ??= blank())
+    if (er.result === 'win') {
+      wins++
+      bucket.wins++
+    } else if (er.result === 'loss') {
+      losses++
+      bucket.losses++
+    } else {
+      pushes++
+      bucket.pushes++
+    }
     pnl += er.pnl
+    bucket.pnl += er.pnl
+  }
+  // Pending edges per generation — how much of the record is still the old rule.
+  const pendingByVersion: Record<string, number> = {}
+  for (const e of pending) {
+    if (!e.edgeSide) continue
+    const v = String(e.edgeVersion ?? 2)
+    pendingByVersion[v] = (pendingByVersion[v] ?? 0) + 1
   }
 
   // Risk calibration (did flagged markets actually surprise?), split by whether the
@@ -135,6 +158,11 @@ export function GET() {
       winRate: decided ? wins / decided : null,
       winRateCI: decided ? wilson(wins, decided) : null,
       enoughSample: decided >= MIN_SAMPLE,
+      /** Per-rule-generation record. v2 = the old rule (minted penny lotteries);
+       *  v3 = confidence + crowd-consistency gated. Locked calls are never rewritten,
+       *  so the two must be judged separately. */
+      byVersion,
+      pendingByVersion,
     },
     calibration: {
       tp,
