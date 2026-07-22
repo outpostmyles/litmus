@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Litmus daily auto-refresh + alerts (macOS launchd agent) — TEMPLATE.
+  Replace /ABSOLUTE/PATH/TO/litmus with your checkout path, then:
+    Install:  cp scripts/com.litmus.daily.plist.example ~/Library/LaunchAgents/com.litmus.daily.plist
+              # (edit the copy's paths first)
+              launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.litmus.daily.plist
+    Run now:  launchctl kickstart -k gui/$(id -u)/com.litmus.daily
+    Disable:  launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.litmus.daily.plist
+  Change the run time via StartCalendarInterval below.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.litmus.daily</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/ABSOLUTE/PATH/TO/litmus/scripts/daily.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>8</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/ABSOLUTE/PATH/TO/litmus/data/cache/daily.log</string>
+  <key>StandardErrorPath</key>
+  <string>/ABSOLUTE/PATH/TO/litmus/data/cache/daily.log</string>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

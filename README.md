@@ -14,13 +14,13 @@ Prediction-market prices track the **event**. Contracts pay out on the **rules t
 
 A prior prompt version scored 10/12; both runs are disclosed in [docs/BACKTEST.md](docs/BACKTEST.md), and the committed [results artifact](data/backtest-results.json) reproduces the table without an API key.
 
-**Live forward ledger** — as of July 19, 2026:
+**Live forward ledger** — as of July 22, 2026 (a running ledger; these numbers move as markets settle):
 
-- **255 predictions locked, 38 settled**, graded automatically on settlement with per-grade provenance.
-- Crowd-price Brier **0.0799** vs. Litmus-adjusted **0.0826** (n=38): **the market is currently beating the tool** on its own published benchmark.
-- Risk calibration: 1 of 2 surprises caught, 12 false alarms (n=32 graded).
-- Paper-trade edges, segmented by the rule that made each call: the retired rule went 1W–9L, +0.31u (profit from one mid-priced win; the nine losses were penny-longshot artifacts the rule was retired for). The current rule is 0W–1L with 4 open — essentially no settled sample yet.
-- Cross-venue: 20 same-claim contract pairs locked across both venues; 13 settled, all identically so far (n=13; no split settlement yet).
+- **255 predictions locked, 47 settled**, graded automatically on settlement with per-grade provenance.
+- Crowd-price Brier **0.0949** vs. Litmus-adjusted **0.0982** (n=45): **the market is currently beating the tool** on its own published benchmark.
+- Risk calibration: 1 of 3 surprises caught, 14 false alarms (n=37 graded).
+- Paper-trade edges, segmented by the rule that made each call: the retired rule went 1W–12L, +0.19u (profit from one mid-priced win; the losses were penny-longshot artifacts the rule was retired for). The current rule is 0W–1L with 4 open — essentially no settled sample yet.
+- Cross-venue: 20 same-claim contract pairs locked across both venues, matched leg-by-leg; all 20 settled identically (World Cup Golden Boot, concluded) — the pipeline graded every pair, no split settlement occurred.
 
 ## Why look-ahead is impossible
 
