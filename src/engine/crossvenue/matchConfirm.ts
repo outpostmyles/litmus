@@ -65,7 +65,8 @@ export async function confirmMatch(
     model,
     max_tokens: 600,
     output_config: { format: zodOutputFormat(MatchSchema) },
-    system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
+    // Below the ~1024-token cache minimum — caching cannot apply here.
+    system: SYSTEM,
     messages: [{ role: 'user', content: buildMatchPrompt(kalshi, poly) }],
   })
   recordUsage('crossvenue:match', model, res.usage)

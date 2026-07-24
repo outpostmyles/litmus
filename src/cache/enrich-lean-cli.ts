@@ -97,7 +97,8 @@ async function main(): Promise<void> {
           model: MODEL,
           max_tokens: 700,
           output_config: { format: zodOutputFormat(LeanSchema) },
-          system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
+          // Haiku prompt is below the ~1024-token cache minimum, so caching cannot apply.
+          system: SYSTEM,
           messages: [{ role: 'user', content: user }],
         })
         recordUsage('lean', MODEL, res.usage)

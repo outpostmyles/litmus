@@ -93,7 +93,8 @@ export async function scoreDivergence(
     max_tokens: 16000,
     thinking: { type: 'adaptive' },
     output_config: { format: zodOutputFormat(DivergenceSchema) },
-    system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
+    // System prompt is below the ~1024-token cache minimum; caching cannot apply.
+    system: SYSTEM,
     messages: [{ role: 'user', content: buildDivergencePrompt(kalshi, poly) }],
   })
   recordUsage('crossvenue:divergence', model, res.usage)

@@ -92,7 +92,8 @@ async function main(): Promise<void> {
           model: MODEL,
           max_tokens: 600,
           output_config: { format: zodOutputFormat(VerdictSchema) },
-          system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
+          // Below the ~1024-token cache minimum — caching cannot apply here.
+          system: SYSTEM,
           messages: [{ role: 'user', content: user }],
         })
         recordUsage('verdict', MODEL, res.usage)
@@ -138,7 +139,7 @@ async function main(): Promise<void> {
           model: MODEL,
           max_tokens: 500,
           output_config: { format: zodOutputFormat(SidesSchema) },
-          system: [{ type: 'text' as const, text: SIDES_SYSTEM, cache_control: { type: 'ephemeral' as const } }],
+          system: SIDES_SYSTEM,
           messages: [{ role: 'user', content: user }],
         })
         recordUsage('verdict', MODEL, res.usage)

@@ -47,9 +47,20 @@ export function costOf(model: string, u: UsageLike): number {
   )
 }
 
-interface DayRecord {
+export interface StageRecord {
   usd: number
-  stages: Record<string, { usd: number; calls: number; inTok: number; outTok: number }>
+  calls: number
+  inTok: number
+  outTok: number
+  /** Input tokens served from the prompt cache (billed at ~10%). */
+  cacheRead?: number
+  /** Input tokens written to the cache (billed at 1.25x). */
+  cacheWrite?: number
+}
+
+export interface DayRecord {
+  usd: number
+  stages: Record<string, StageRecord>
 }
 
 type Ledger = Record<string, DayRecord> // key: YYYY-MM-DD
@@ -110,6 +121,8 @@ export function recordUsage(stage: string, model: string, u: UsageLike): number 
   s.calls += 1
   s.inTok += u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0)
   s.outTok += u.output_tokens
+  s.cacheRead = (s.cacheRead ?? 0) + (u.cache_read_input_tokens ?? 0)
+  s.cacheWrite = (s.cacheWrite ?? 0) + (u.cache_creation_input_tokens ?? 0)
   saveLedger(l)
 
   const budget = dailyBudgetUsd()
