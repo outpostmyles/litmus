@@ -149,62 +149,69 @@ export function TrackClient() {
 
   return (
     <div>
+      {/* What the ledger PROVES, stated before what it scores. Every one of these is a
+          structural fact, not a result that could swing next week. */}
+      <div className="glass mb-3 rounded-2xl px-5 py-4">
+        <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3">
+          {[
+            { n: counts.tracked, l: 'predictions locked' },
+            { n: counts.resolved, l: 'graded on settlement' },
+            { n: 0, l: 'ever rewritten' },
+          ].map((s) => (
+            <div key={s.l}>
+              <div className="mono text-2xl font-semibold tabular-nums text-fg">{s.n}</div>
+              <div className="mono mt-0.5 text-[0.62rem] uppercase tracking-wider text-faint">{s.l}</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 max-w-2xl text-[0.86rem] leading-relaxed text-muted">
+          Each call is locked while the market is still open — score, band, side and entry price — then graded
+          automatically against the venue&rsquo;s own settlement, with the status string that produced the outcome
+          stored on the row. Closed, stale-priced and unverifiable markets are refused at lock time. Nothing below
+          was written after the fact.
+        </p>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat
           label="edge simulation"
           foot="1-unit paper trade on each flagged edge, entered at the open-market price when flagged. Calls are segmented by the rule that made them: v2 is the retired rule (it minted penny-longshot 'edges'), v3 requires a quotable clause and a price the crowd hasn't already read correctly. Locked calls are never rewritten, so the old rule's record stays visible rather than being quietly deleted."
         >
+          {/* Deliberately NOT an aggregate across rule generations — that number
+              describes no rule that actually runs. Each generation stands alone. */}
           {sim.decided > 0 ? (
-            <div className="flex items-baseline justify-between">
-              <span className="mono text-3xl font-semibold text-fg">
-                {sim.wins}–{sim.losses}
-              </span>
-              <span className={`mono text-2xl font-semibold ${pnlColor}`}>{signed(sim.pnl)}u</span>
+            <div className="space-y-2">
+              {['3', '2'].map((v) => {
+                const s = sim.byVersion[v]
+                const open = sim.pendingByVersion[v] ?? 0
+                if (!s && !open) return null
+                const dec = s ? s.wins + s.losses : 0
+                const cur = v === '3'
+                return (
+                  <div key={v}>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className={`mono ${cur ? 'text-xl text-fg' : 'text-sm text-muted'} font-semibold`}>
+                        {dec > 0 ? `${s!.wins}–${s!.losses}` : '—'}
+                      </span>
+                      <span className={`mono ${cur ? 'text-base' : 'text-xs'} font-semibold ${s && s.pnl >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                        {s ? `${signed(s.pnl)}u` : ''}
+                      </span>
+                    </div>
+                    <div className="mono mt-0.5 text-[0.62rem] uppercase tracking-wider text-faint">
+                      {cur ? 'current rule' : 'retired rule'} · {open} open
+                      {dec > 0 && dec < minSample ? ` · n=${dec}` : ''}
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="mono pt-1 text-[0.68rem] text-faint">
+                win rate reported at n={minSample}
+              </div>
             </div>
           ) : (
             <span className="text-sm text-muted">no edges resolved yet</span>
           )}
-          {sim.decided > 0 &&
-            (sim.enoughSample ? (
-              <div className="mono mt-1 text-xs text-muted">
-                {pct(sim.winRate)} win rate · {ci(sim.winRateCI)}
-                {sim.pushes ? ` · ${sim.pushes} push` : ''}
-              </div>
-            ) : (
-              <div className="mono mt-1 text-xs text-faint">
-                {sim.decided}/{minSample} decided — win rate reported once the sample is real
-              </div>
-            ))}
 
-          {/* Segmented by the rule that made each call. A locked prediction is never
-              rewritten, so the old rule's calls stay in the record — but the fixed
-              rule must not be judged on them, and must not hide behind them. */}
-          {Object.keys(sim.byVersion).length > 0 && (
-            <div className="mono mt-3 space-y-1 border-t border-line pt-2 text-[0.68rem]">
-              {['3', '2'].map((v) => {
-                const s = sim.byVersion[v]
-                const pendingN = sim.pendingByVersion[v] ?? 0
-                if (!s && !pendingN) return null
-                const dec = s ? s.wins + s.losses : 0
-                const label = v === '3' ? 'v3 (current rule)' : 'v2 (retired rule)'
-                return (
-                  <div key={v} className="flex items-baseline justify-between gap-2">
-                    <span className={v === '3' ? 'text-fg' : 'text-faint'}>{label}</span>
-                    <span className={v === '3' ? 'text-muted' : 'text-faint'}>
-                      {dec > 0 ? (
-                        <>
-                          {s!.wins}–{s!.losses} · {signed(s!.pnl)}u
-                        </>
-                      ) : (
-                        'none settled'
-                      )}
-                      {pendingN > 0 && ` · ${pendingN} open`}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
         </Stat>
 
         <Stat

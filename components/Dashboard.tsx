@@ -100,6 +100,17 @@ interface Alert {
 
 const BANDS: (RiskBand | 'all')[] = ['all', 'severe', 'high', 'elevated', 'moderate', 'low']
 
+// Explicit labels — a `capitalize` class used to title-case these and silently
+// mangled the "Any risk" placeholder alongside them.
+const BAND_SELECT_LABEL: Record<RiskBand | 'all', string> = {
+  all: 'Any risk band',
+  severe: 'Severe',
+  high: 'High',
+  elevated: 'Elevated',
+  moderate: 'Moderate',
+  low: 'Low',
+}
+
 function compact(n: number): string {
   if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B'
   if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M'
@@ -300,26 +311,22 @@ export function Dashboard() {
   return (
     <div>
       <div className="glass rounded-2xl p-3">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex rounded-xl bg-black/30 p-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex h-9 items-center rounded-xl border border-line bg-black/30 p-0.5">
             {(['all', 'Kalshi', 'Polymarket'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPlatform(p)}
-                className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                className={`h-8 rounded-[0.6rem] px-3 text-[0.8125rem] transition-colors ${
                   platform === p ? 'bg-white/[0.08] text-fg' : 'text-muted hover:text-fg'
                 }`}
               >
-                {p === 'all' ? 'All' : p}
+                {p === 'all' ? 'All venues' : p}
               </button>
             ))}
           </div>
 
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none focus:ring-1 focus:ring-brand/40"
-          >
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="control">
             {categories.map((c) => (
               <option key={c} value={c}>
                 {c === 'all' ? 'All categories' : c}
@@ -330,11 +337,11 @@ export function Dashboard() {
           <select
             value={band}
             onChange={(e) => setBand(e.target.value as RiskBand | 'all')}
-            className="rounded-xl border border-line bg-black/30 px-3 py-2 text-sm capitalize text-fg outline-none focus:ring-1 focus:ring-brand/40"
+            className="control"
           >
             {BANDS.map((b) => (
               <option key={b} value={b}>
-                {b === 'all' ? 'Any risk' : b}
+                {b === 'all' ? 'Any risk band' : BAND_SELECT_LABEL[b]}
               </option>
             ))}
           </select>
@@ -342,42 +349,33 @@ export function Dashboard() {
           <button
             onClick={() => setEdgesOnly((v) => !v)}
             title={GLOSSARY.edge}
-            className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
-              edgesOnly ? 'border-brand/50 bg-brand/10 text-brand' : 'border-line text-muted hover:text-fg'
-            }`}
+            className={`control ${edgesOnly ? 'control-on' : ''}`}
           >
-            edges{edgeCount ? ` (${edgeCount})` : ''}
+            Edges{edgeCount ? ` (${edgeCount})` : ''}
           </button>
 
           <button
             onClick={() => setWatchOnly((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition-colors ${
-              watchOnly ? 'border-amber-400/50 bg-amber-400/10 text-amber-300' : 'border-line text-muted hover:text-fg'
-            }`}
+            className={`control gap-1.5 ${watchOnly ? 'control-on' : ''}`}
           >
-            <StarIcon filled={watchOnly} size={13} /> watch{watched.size ? ` (${watched.size})` : ''}
+            <StarIcon filled={watchOnly} size={13} /> Watching{watched.size ? ` (${watched.size})` : ''}
           </button>
 
-          <button
-            onClick={() => setNewOnly((v) => !v)}
-            className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
-              newOnly ? 'border-emerald-400/50 bg-emerald-400/10 text-emerald-300' : 'border-line text-muted hover:text-fg'
-            }`}
-          >
-            new{newCount ? ` (${newCount})` : ''}
+          <button onClick={() => setNewOnly((v) => !v)} className={`control ${newOnly ? 'control-on' : ''}`}>
+            New{newCount ? ` (${newCount})` : ''}
           </button>
 
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="search…"
-            className="mono min-w-[6rem] flex-1 rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none placeholder:text-faint focus:ring-1 focus:ring-brand/40"
+            placeholder="Search markets…"
+            className="control min-w-[7rem] flex-1"
           />
 
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as 'risk' | 'live' | 'edge' | 'volume' | 'closing')}
-            className="rounded-xl border border-line bg-black/30 px-3 py-2 text-sm text-fg outline-none focus:ring-1 focus:ring-brand/40"
+            className="control"
           >
             <option value="live">Sort: live risk</option>
             <option value="risk">Sort: text hazard</option>
@@ -386,12 +384,8 @@ export function Dashboard() {
             <option value="closing">Sort: closing soon</option>
           </select>
 
-          <button
-            onClick={load}
-            disabled={loading}
-            className="rounded-xl border border-line px-3 py-2 text-sm text-muted transition hover:border-brand/40 hover:text-fg disabled:opacity-40"
-          >
-            {loading ? '…' : '↻'}
+          <button onClick={load} disabled={loading} className="control disabled:opacity-40">
+            {loading ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
 
@@ -407,10 +401,7 @@ export function Dashboard() {
               </span>
             )}
             {data.unscoredCount > 0 && (
-              <span className="text-amber-300/80">
-                {data.unscoredCount} not yet scored — new listings score automatically within ~2 min; the rest on the
-                next <span className="text-amber-200">npm run backfill</span>
-              </span>
+              <span>{data.unscoredCount} listed since the last scoring pass</span>
             )}
           </div>
         )}

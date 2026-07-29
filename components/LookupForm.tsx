@@ -9,13 +9,13 @@ type Mode = 'kalshi' | 'polymarket' | 'text'
 
 const MODES: { id: Mode; label: string; placeholder: string }[] = [
   { id: 'kalshi', label: 'Kalshi', placeholder: 'Ticker — e.g. KXELONMARS-99' },
-  { id: 'polymarket', label: 'Polymarket', placeholder: 'Slug or URL — e.g. will-egypt-win-the-2026-fifa-world-cup' },
+  { id: 'polymarket', label: 'Polymarket', placeholder: 'Slug or URL — e.g. will-the-us-invade-iran-before-2027' },
   { id: 'text', label: 'Paste text', placeholder: 'Paste the full resolution criteria…' },
 ]
 
 const EXAMPLES: { mode: Mode; value: string; label: string }[] = [
   { mode: 'kalshi', value: 'KXELONMARS-99', label: 'Elon → Mars' },
-  { mode: 'polymarket', value: 'will-egypt-win-the-2026-fifa-world-cup', label: 'Egypt · World Cup' },
+  { mode: 'polymarket', value: 'will-the-us-invade-iran-before-2027', label: 'US invades Iran · scores 74' },
 ]
 
 export function LookupForm() {

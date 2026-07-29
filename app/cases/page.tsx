@@ -145,8 +145,27 @@ export default function CasesPage() {
                       {isControl ? (
                         <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-muted">control — clean text</span>
                       ) : (
-                        <span className="rounded bg-rose-400/10 px-1.5 py-0.5 text-rose-300">real dispute</span>
+                        <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-muted">real dispute</span>
                       )}
+                      {/* Say plainly whether the engine caught this one. An unlabeled
+                          low score at the bottom of the page reads as a quiet failure;
+                          a labeled miss reads as a disclosed limitation. */}
+                      {s &&
+                        (isControl ? (
+                          s.combined < 45 ? (
+                            <span className="rounded bg-emerald-400/10 px-1.5 py-0.5 text-emerald-300">
+                              correctly not flagged
+                            </span>
+                          ) : (
+                            <span className="rounded bg-rose-400/10 px-1.5 py-0.5 text-rose-300">false alarm</span>
+                          )
+                        ) : s.combined >= 45 ? (
+                          <span className="rounded bg-emerald-400/10 px-1.5 py-0.5 text-emerald-300">caught</span>
+                        ) : (
+                          <span className="rounded bg-amber-400/10 px-1.5 py-0.5 text-amber-300">
+                            missed — scored below the 45 line
+                          </span>
+                        ))}
                     </div>
                     <h2 className="mt-1.5 text-lg font-semibold leading-snug text-fg sm:text-xl">
                       {f.market.question}

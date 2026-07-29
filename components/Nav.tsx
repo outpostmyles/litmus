@@ -3,36 +3,34 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+// Primary nav is the first-visit path: the answer, the universe, the proof.
+// /worldcup is intentionally absent — it was built for a specific tournament that
+// has ended, and a stale tab in the nav reads as an abandoned project. The page
+// still exists and is linked from the Cases page as an archived event study.
 const LINKS = [
-  { href: '/', label: 'Lookup' },
   { href: '/board', label: 'Board' },
   { href: '/pairs', label: 'Pairs' },
-  { href: '/worldcup', label: 'World Cup' },
   { href: '/track', label: 'Track' },
   { href: '/cases', label: 'Cases' },
+  { href: '/lookup', label: 'Lookup' },
   { href: '/guide', label: 'Guide' },
 ]
 
+/**
+ * A litmus test strip: four bands in the product's own risk ramp (the same hue sweep
+ * riskColor() applies to every score — low/green through severe/red). The mark is the
+ * thing the tool does: a strip whose colour tells you the result at a glance.
+ */
 export function LitmusMark({ size = 30 }: { size?: number }) {
+  const bands = ['hsl(130 88% 62%)', 'hsl(70 88% 62%)', 'hsl(30 88% 62%)', 'hsl(3 88% 62%)']
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
-      <defs>
-        <linearGradient id="lm-g" x1="0" y1="0" x2="40" y2="40">
-          <stop offset="0" stopColor="#67e8f9" />
-          <stop offset="0.55" stopColor="#a78bfa" />
-          <stop offset="1" stopColor="#fb7185" />
-        </linearGradient>
-      </defs>
-      <rect x="1.5" y="1.5" width="37" height="37" rx="11" stroke="url(#lm-g)" strokeWidth="1.6" opacity="0.7" />
-      {/* indicator drop */}
-      <path
-        d="M20 9c4.6 5 7 8.4 7 12a7 7 0 1 1-14 0c0-3.6 2.4-7 7-12z"
-        stroke="url(#lm-g)"
-        strokeWidth="1.8"
-        fill="url(#lm-g)"
-        fillOpacity="0.16"
-      />
-      <circle cx="20" cy="22" r="2.4" fill="url(#lm-g)" />
+      <g>
+        {bands.map((c, i) => (
+          <rect key={c} x="13" y={5 + i * 7.6} width="14" height="6.4" rx="1.4" fill={c} opacity={0.55 + i * 0.15} />
+        ))}
+      </g>
+      <rect x="11.2" y="3.2" width="17.6" height="33.6" rx="3.2" stroke="var(--color-line)" strokeWidth="1.4" />
     </svg>
   )
 }
@@ -52,14 +50,16 @@ export function Nav() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1.5">
+        {/* Scrolls rather than overflowing on narrow viewports — the header used to
+            blow out to 663px inside a 390px phone screen. */}
+        <nav className="-mx-2 flex items-center gap-1 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {LINKS.map((l) => {
             const active = l.href === '/' ? path === '/' : path.startsWith(l.href)
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                className={`rounded-lg px-3.5 py-1.5 text-sm outline-none transition-colors focus-visible:ring-1 focus-visible:ring-brand/50 ${
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm outline-none transition-colors focus-visible:ring-1 focus-visible:ring-brand/50 ${
                   active ? 'bg-white/[0.06] text-fg' : 'text-muted hover:text-fg'
                 }`}
               >
@@ -67,10 +67,6 @@ export function Nav() {
               </Link>
             )
           })}
-          <span className="mono ml-2 hidden items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[0.7rem] text-faint sm:flex">
-            <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-brand" />
-            opus-4-8
-          </span>
         </nav>
       </div>
     </header>

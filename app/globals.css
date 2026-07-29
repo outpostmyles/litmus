@@ -100,6 +100,53 @@
     border-radius: 999px;
     overflow: hidden;
   }
+
+  /* One control language for every filter: same height, radius, type size and
+     border — native <select> included, so nothing renders with OS chrome beside
+     hand-styled buttons. */
+  .control {
+    display: inline-flex;
+    align-items: center;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-line);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1;
+    color: var(--color-muted);
+    outline: none;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+  .control:hover {
+    color: var(--color-fg);
+  }
+  .control:focus-visible {
+    border-color: rgba(103, 232, 249, 0.5);
+  }
+  select.control {
+    appearance: none;
+    -webkit-appearance: none;
+    color: var(--color-fg);
+    padding-right: 1.9rem;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b91ad' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+  }
+  input.control {
+    color: var(--color-fg);
+  }
+  input.control::placeholder {
+    color: var(--color-faint);
+  }
+  /* Active/toggled filter — colour set per-control via an inline accent. */
+  .control-on {
+    color: var(--color-fg);
+    border-color: rgba(103, 232, 249, 0.45);
+    background: rgba(103, 232, 249, 0.08);
+  }
 }
 
 @keyframes spin-slow {

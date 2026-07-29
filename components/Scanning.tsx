@@ -19,7 +19,7 @@ export function Scanning() {
         </div>
         <div>
           <div className="text-sm text-fg">Reading the resolution criteria</div>
-          <div className="label mt-2">scoring five dimensions · opus-4-8</div>
+          <div className="label mt-2">scoring five dimensions</div>
         </div>
         <div aria-hidden className="mt-1 w-full max-w-md space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (

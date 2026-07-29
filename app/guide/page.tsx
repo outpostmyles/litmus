@@ -206,7 +206,7 @@ export default function GuidePage() {
       </div>
 
       <div className="mt-12 border-t border-line pt-6 text-center">
-        <p className="mono text-xs text-faint">Litmus · resolution-risk scanner · powered by Claude Opus 4.8</p>
+        <p className="mono text-xs text-faint">Litmus · resolution-risk scanner</p>
       </div>
     </div>
   )

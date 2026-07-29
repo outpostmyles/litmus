@@ -54,12 +54,16 @@ export default function WorldCupPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <section className="pb-7 pt-4">
-        <div className="label">tournament mode</div>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">World Cup settlement traps</h1>
+        <div className="label">tournament mode · archived</div>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          World Cup 2026 — settlement traps
+        </h1>
         <p className="mt-3 max-w-2xl text-[0.98rem] leading-relaxed text-muted">
-          Every scored World Cup market family, ranked by <span className="text-fg">live risk</span> — how badly the
-          written rules can diverge from what the football says, weighted by whether the price leaves room for it to
-          matter. The tournament is decided on the pitch; your payout is decided by the fine print.
+          Run live for the duration of the tournament, which concluded July 20, 2026. Litmus matched{' '}
+          <span className="text-fg">20 Golden Boot contracts leg-by-leg across Kalshi and Polymarket</span>, locked a
+          prediction on each while the markets were open, and graded all 20 on settlement:{' '}
+          <span className="text-fg">every pair settled identically — no split.</span> Kept here as the record of a
+          live event run; the markets below are settled or near-settled.
         </p>
         {priceAge && <p className="mono mt-2 text-xs text-faint">prices as of {priceAge}</p>}
       </section>
