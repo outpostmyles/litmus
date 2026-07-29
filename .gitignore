@@ -31,3 +31,4 @@ npm-debug.log*
 # data — keep curated fixtures, ignore bulk pulls
 data/raw/
 data/cache/
+data/scan-results.json

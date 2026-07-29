@@ -22,6 +22,8 @@
     "watch": "tsx src/watcher/daemon.ts",
     "pairs-settle": "tsx src/cache/pairs-settle-cli.ts",
     "backtest": "tsx src/backtest/run.ts",
+    "verify": "tsx src/backtest/verify.ts",
+    "track:stats": "tsx src/track/stats-cli.ts",
     "spend": "tsx src/lib/spend-report-cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

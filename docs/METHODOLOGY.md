@@ -6,8 +6,9 @@ adversarially, and before the money moves. It prices the *rules*, not the event.
 
 ## The taxonomy: five ways resolution goes sideways
 
-Every dimension maps to a documented, recurring class of real dispute (each linked example
-is in the [case gallery](../app/cases) / `data/fixtures/backtest`):
+Every dimension maps to a documented, recurring class of real dispute. Each case below is a
+committed fixture in [`data/fixtures/backtest/`](../data/fixtures/backtest) — verbatim
+pre-settlement rules text, plus a separate answer-key field the engine is never passed:
 
 | Dimension | Failure class it catches | Real case |
 |---|---|---|
