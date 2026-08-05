@@ -17,12 +17,13 @@ Litmus scores that gap on every high-volume Kalshi and Polymarket market, then g
 
 A prior prompt version scored 10/12 = 83%; both runs are disclosed in [docs/BACKTEST.md](docs/BACKTEST.md). **You can check these numbers yourself in one command, with no API key** — see [Verify the results](#verify-the-results).
 
-**Live forward ledger** — running since **June 29, 2026**; snapshot below taken **July 29, 2026**. These numbers move as markets settle, so a later run will not match exactly; regenerate them yourself with `npm run track:stats`.
+**Live forward ledger** — running since **June 29, 2026**; snapshot below taken **August 5, 2026**. These numbers move as markets settle, so a later run will not match exactly; regenerate them yourself with `npm run track:stats`.
 
-- **255 predictions locked, 50 settled**, each graded automatically on settlement with per-grade provenance (the venue status string that produced the outcome is stored on the row).
-- Crowd-price Brier **0.0889** vs. Litmus-adjusted **0.0926** (n=48): **the market is currently beating the tool** on its own published benchmark. That comparison is displayed in the app, not just here.
-- Risk calibration: 1 of 3 surprises caught, 15 false alarms (n=40 graded).
-- Paper-trade edges, segmented by the rule that made each call: the retired rule is 1W–14L, +0.17u — profit from a single mid-priced win, while the losses were penny-longshot artifacts that motivated retiring it. The current rule is 0W–1L with 4 open: **essentially no settled sample yet**, and the app labels it that way rather than reporting a rate.
+- **285 predictions locked, 71 settled**, each graded automatically on settlement with per-grade provenance (the venue status string that produced the outcome is stored on the row).
+- **The ledger's first contested settlements arrived — 7 markets went to contested resolution, and Litmus had flagged 4 of the 7 at lock time** (scores 55–62; n=7, stated as counts because the sample is small). One of them — "Will China invades Taiwan before GTA VI?" (the venue's own title) — had its exact trap clause (*"If neither occurs by July 31, 2026, 11:59 PM ET, this market will resolve to 50-50."*) quoted by the tool while the market was still open. Settlement-process outcomes so far: 62 clean, 2 delayed, 7 contested.
+- Risk calibration: 5 of 12 surprises caught, 19 false alarms (n=61 graded) — up from 1 of 3 a week earlier as settlements accumulated.
+- Crowd-price Brier **0.0930** vs. Litmus-adjusted **0.0975** (n=62): **the market is currently beating the tool** on its own published benchmark. That comparison is displayed in the app, not just here.
+- Paper-trade edges, segmented by the rule that made each call: the retired rule is 1W–15L, −0.09u — its single mid-priced win no longer covers the penny-longshot losses that motivated retiring it. The current rule is 0W–3L with 4 open: **below the n=20 reporting gate**, and the app labels it that way rather than reporting a rate.
 - Cross-venue: 20 same-claim contract pairs matched leg-by-leg across both venues; all 20 settled identically (World Cup Golden Boot, concluded). The pipeline graded every pair — no split settlement occurred.
 
 ## What would be hard to fake
@@ -30,7 +31,7 @@ A prior prompt version scored 10/12 = 83%; both runs are disclosed in [docs/BACK
 A hiring manager's reasonable prior in 2026 is that an AI-assisted project was generated in a weekend. These are the parts of this repo that a weekend cannot produce:
 
 - **Elapsed time.** The forward ledger has been accumulating since June 29, 2026 and grades itself daily via a scheduled job. A locked prediction records the price at lock and is never rewritten — the row is a timestamped commitment, not a retrospective claim.
-- **Published losses.** The tool is currently *losing* to the crowd on its own Brier benchmark, and the retired edge rule's 1–14 record is displayed next to the current rule's rather than deleted. Both are on the Track page and in this README.
+- **Published losses.** The tool is currently *losing* to the crowd on its own Brier benchmark, and the retired edge rule's 1–15 record is displayed next to the current rule's 0–3 rather than deleted. Both are on the Track page and in this README.
 - **Self-imposed constraints that cost accuracy.** Predictions lock only while markets are open; grading never touches settled prices; markets that are closed, stale-priced, or unverifiably open are *refused* at lock time (`src/track/lock.ts`, one shared code path for both ingest lanes, with regression tests). Each constraint discards data that would have flattered the record.
 - **Adversarial audit with documented repairs.** Three real look-ahead bugs were found and fixed during development: post-close snapshots, a settled-price fallback in grading, and null-close-date "free wins" on effectively-decided markets. Tainted rows were purged and the taint documented in commit history rather than quietly dropped.
 - **Rates gated on sample size.** The UI refuses to display a win rate or recall percentage below n=20 and shows "building sample" instead. Wilson confidence intervals accompany every published proportion.
@@ -72,13 +73,13 @@ _Screenshots pending — run `npm run dev` to see the six pages locally (board �
 
 ## Honest limitations
 
-Every metric above is small-sample; the confidence intervals are wide and quoted for that reason. The precision-recall tradeoff is unresolved — the backtest set is nearly all positives, and the live false-alarm count shows it. The current edge rule has one settled trade. The app runs end-to-end but locally only: no deployment, no auth, no database; alerts are desktop notifications. The market is ahead on Brier and the Track page says so.
+Every metric above is small-sample; the confidence intervals are wide and quoted for that reason. The precision-recall tradeoff is unresolved — the backtest set is nearly all positives, and the live false-alarm count shows it. The current edge rule has three settled trades, all losses. The 4-of-7 contested-settlement hit rate is seven data points from one related market family, not a validated rate. The app runs end-to-end but locally only: no deployment, no auth, no database; alerts are desktop notifications. The market is ahead on Brier and the Track page says so.
 
 ## Stack and scale
 
-TypeScript throughout — Next.js app over a framework-agnostic plain-TS engine shared with CLIs and the backtest harness. Anthropic API with structured outputs (Opus for rubric scoring and rule-diffing, Haiku for cheap passes), Kalshi and Polymarket public APIs, local JSON state with atomic writes. ~9,800 lines across 82 files, 72 tests covering the correctness-critical paths (locking invariants, verdict gates, matching, pair-risk math).
+TypeScript throughout — Next.js app over a framework-agnostic plain-TS engine shared with CLIs and the backtest harness. Anthropic API with structured outputs (Opus for rubric scoring and rule-diffing, Haiku for cheap passes), Kalshi and Polymarket public APIs, local JSON state with atomic writes. ~10,000 lines across 82 files, 72 tests covering the correctness-critical paths (locking invariants, verdict gates, matching, pair-risk math).
 
-Model spend is metered per call against a hard daily cap: `npm run spend` reports **$4.83** recorded since the spend ledger was instrumented (roughly $20 including earlier uninstrumented runs). Scoring halts when the cap is hit; grading and locking are free and never blocked.
+Model spend is metered per call against a hard daily cap: `npm run spend` reports **$6.99** recorded since the spend ledger was instrumented (roughly $22 including earlier uninstrumented runs). Scoring halts when the cap is hit; grading and locking are free and never blocked.
 
 ## Where to look in the code
 
