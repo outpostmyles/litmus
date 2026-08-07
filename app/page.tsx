@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { loadCatalog, loadScores } from '@/src/cache/store'
+import { loadTrack } from '@/src/track/store'
 import { riskColor, liveRisk, daysUntil, BAND_LABEL, type RiskBand } from '@/lib/litmus'
 import { LeanChip, type VerdictData } from '@/components/Verdict'
 
@@ -14,6 +15,7 @@ const HORIZON_DAYS = 75
 export default function Home() {
   const catalog = loadCatalog()
   const scores = loadScores()
+  const tracked = Object.keys(loadTrack()).length
 
   const rows = catalog
     .map((e) => {
@@ -59,7 +61,7 @@ export default function Home() {
             <span className="text-fg">{flagged}</span> of {scored} live markets flagged
           </span>
           <span>
-            <span className="text-fg">255</span> predictions locked and self-graded
+            <span className="text-fg">{tracked}</span> predictions locked and self-graded
           </span>
         </div>
       </section>
