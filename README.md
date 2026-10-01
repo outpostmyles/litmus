@@ -67,7 +67,7 @@ _Screenshots pending — run `npm run dev` to see the six pages locally (board �
 ## How it works
 
 - Pipeline: ingest both venues' public APIs → score each unique rulebook once (cached by a hash of the rules text — nothing is paid for twice) → lock predictions → settle → grade. Ingest, settlement and grading run on a daily schedule at zero model cost; scoring new rulebooks is a separate, budget-capped step (a manual backfill, or a fast-scan daemon that catches new listings within minutes).
-- The **LLM only reads text and quotes clauses** (five-dimension rubric: source clarity, criteria precision, literal-vs-intuitive gap, timing, dispute surface). **Every number is computed deterministically in audited code** — score combination, edge gating, pair risk, calibration.
+- The **LLM reads the rules and does two things**: it rates five risk dimensions (source clarity, criteria precision, literal-vs-intuitive gap, timing, dispute surface) and quotes the clause behind each rating. **Everything downstream is deterministic, audited code** — the combined score, flagging, edge gating, pair risk, calibration, and every track-record metric. The model never sees outcomes and never grades its own calls.
 - Cross-venue matching works at the individual-contract level: deterministic candidate blocking, LLM same-event confirmation with an explicit fan-out-trap rule, then per-leg entity matching, producing verbatim clause diffs and a concrete "scenario that splits the venues."
 - The fast display layer is gated in code, not prompts: a verdict's killer clause must appear **verbatim** in the rules or the lean collapses to UNCLEAR; a divergence score is hard-capped without a concrete split scenario; edges at extreme prices require quote-the-clause confidence.
 
