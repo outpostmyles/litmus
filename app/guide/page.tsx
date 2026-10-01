@@ -29,7 +29,9 @@ const BANDS: { band: RiskBand; score: number }[] = [
 ]
 
 const COMMANDS: { cmd: string; desc: string }[] = [
-  { cmd: 'npm run dev', desc: 'Start the web app at localhost:3000 (Lookup, Board, Guide).' },
+  { cmd: 'npm run dev', desc: 'Start the web app at localhost:3000.' },
+  { cmd: 'npm run verify', desc: 'Recompute the published backtest from committed files — no API key.' },
+  { cmd: 'npm run track:stats', desc: 'Print the live ledger: locked, settled, calibration, Brier vs the crowd.' },
   { cmd: 'npm run ingest', desc: 'Pull the high-volume markets + live prices into the cache. Free, no model calls.' },
   { cmd: 'npm run backfill', desc: 'Score any not-yet-cached markets once (~$0.05 each). Resumable.' },
   { cmd: 'npm run enrich', desc: 'Add the directional lean to scored markets (cheap, Haiku).' },
@@ -99,7 +101,7 @@ export default function GuidePage() {
 
         <Section label="two ways in" title="Look one up, or scan the board">
           <p>
-            <Link href="/" className="text-brand hover:underline">
+            <Link href="/lookup" className="text-brand hover:underline">
               Lookup
             </Link>{' '}
             scores a single market on demand — paste a Kalshi ticker, a Polymarket slug or URL, or raw resolution text,
